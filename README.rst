@@ -13,6 +13,19 @@ directories.
 Tests
 =====
 
+It seems that "best practice" advise is to install the package in editable
+mode::
+
+    pip install . -e
+
+Although it does not seem to be explicitly mentioned anywhere, best practice
+should also be to do this in a ``virtualenv``?
+
+This would require that the ``virtualenv`` tool is available on the buildslaves. (
+I'm not sure what) is the status there? In particular on the Windows slaves.
+
+testing (such)
+
 We setup the tests as described here:
 http://stackoverflow.com/q/20971619/1717320
 
