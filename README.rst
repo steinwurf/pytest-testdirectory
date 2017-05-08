@@ -44,6 +44,14 @@ the API we can create additional temporary directories, populate them with
 an initial set of files and finally run some executable and observe its
 behavior.
 
+Relase new version
+==================
+
+1. Edit NEWS.rst and wscript (set correct VERSION)
+2. Run ::
+
+    ./waf upload
+
 Source code
 ===========
 
