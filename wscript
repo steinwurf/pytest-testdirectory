@@ -39,6 +39,12 @@ def build(bld):
     if bld.options.run_tests:
         _pytest(bld=bld)
 
+    # Build Universal Wheel
+    host_python_binary = sys.executable
+    bld(rule=host_python_binary+' setup.py bdist_wheel --universal',
+        cwd=bld.path,
+        always=True)
+
 
 def _pytest(bld):
 
@@ -81,15 +87,16 @@ def _pytest(bld):
 
     bld(rule=python_binary+' -m pip install pytest',
         cwd=bld.path,
-        env=bld_env,
         always=True)
 
     bld.add_group()
 
-    bld(rule=python_binary+' -m pip install . -e',
+    # Install the pytest-testdirectory plugin in the virtualenv
+    bld(rule=python_binary+' -m pip install -e .',
         cwd=bld.path,
-        env=bld_env,
         always=True)
+
+    bld.add_group()
 
     # We override the pytest temp folder with the basetemp option,
     # so the test folders will be available at the specified location
@@ -109,5 +116,6 @@ def _pytest(bld):
 
     bld(rule=command,
         cwd=bld.path,
-        env=bld_env,
         always=True)
+
+    bld.add_group()

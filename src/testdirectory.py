@@ -8,6 +8,13 @@ import os
 from . import runresult
 from . import runresulterror
 
+@pytest.fixture
+def testdirectory(tmpdir):
+    """ Creates the py.test fixture to make it usable withing the unit tests.
+    See the TestDirectory class for more information.
+    """
+    return TestDirectory(tmpdir)
+
 class TestDirectory(object):
     """Testing code by invoking executable which potentially creates and deletes
     files and directories can be hard and error prone.
@@ -36,7 +43,8 @@ class TestDirectory(object):
     an initial set of files and finally run some executable and observe its
     behavior.
 
-    inspiration: http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
+    Inspiration:
+     - http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
     """
     def __init__(self, tmpdir):
 

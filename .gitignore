@@ -1,3 +1,14 @@
+# waf projects
+waf-*
+waf3-*
+.waf-*
+.waf3-*
+.lock-*
+build
+resolve_symlinks
+resolved_dependencies
+pytest_environment_*
+
 # Python
 *.pyc
 .cache
