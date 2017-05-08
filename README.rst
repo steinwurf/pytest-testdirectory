@@ -2,6 +2,9 @@
 Introduction
 ============
 
+.. image:: https://badge.fury.io/py/pytest-testdirectory.svg
+    :target: https://badge.fury.io/py/pytest-testdirectory
+
 Testing code by invoking executable which potentially creates and deletes
 files and directories can be hard and error prone.
 
