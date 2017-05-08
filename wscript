@@ -5,10 +5,22 @@ import os
 import sys
 import shutil
 import hashlib
+import subprocess
+
+from waflib.Configure import conf
+from waflib import Logs
 
 import waflib
 
 top = '.'
+
+VERSION = '0.0.0'
+
+from waflib.Build import BuildContext
+class UploadContext(BuildContext):
+        cmd = 'upload'
+        fun = 'upload'
+
 
 def resolve(ctx):
 
@@ -33,6 +45,53 @@ def options(opt):
         '--pytest_basetemp', default='pytest',
         help='Set the basetemp folder where pytest executes the tests')
 
+@conf
+def create_virtualenv(conf, cwd, env, name):
+
+    # The Python executable
+    python = sys.executable
+
+    if not name:
+
+        # Make a unique virtualenv for different Python executables (e.g. 2.x
+        # and 3.x)
+        unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
+        name = 'virtualenv-{}'.format(unique)
+
+    conf.start_msg('Create virtualenv')
+
+    conf.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages',
+        cwd=cwd, env=env)
+
+    conf.env["VENV_PATH"] = cwd.find_node(name).abspath()
+
+    conf.end_msg(conf.env.VENV_PATH)
+
+    # We use the binaries in the virtualenv
+    if sys.platform == 'win32':
+        path_list = [os.path.join(conf.env.VENV_PATH, 'Scripts')]
+    else:
+        path_list = [os.path.join(conf.env.VENV_PATH, 'bin')]
+
+    conf.find_program('python', var="VPYTHON", mandatory=True,
+        path_list=path_list)
+
+
+def configure(conf):
+
+    # Create virtualenv
+    python_path = \
+    [
+        conf.dependency_path('virtualenv'),
+    ]
+
+    env = dict(os.environ)
+    separator = ';' if sys.platform == 'win32' else ':'
+    env.update({'PYTHONPATH': separator.join(python_path)})
+
+    conf.create_virtualenv(cwd=conf.path, env=env, name=None)
+
+
 
 def build(bld):
 
@@ -45,54 +104,32 @@ def build(bld):
         cwd=bld.path,
         always=True)
 
+def upload(ctx):
+
+    wheel = ctx.path.ant_glob('dist/*-'+VERSION+'-*.whl')
+
+    if not len(wheel) == 1:
+        ctx.fatal('No wheel to upload (or version mismatch)')
+    else:
+        Logs.info('Wheel %s', wheel[0])
+
+    ctx.cmd_and_log('%s -m pip install twine' % ctx.env.VPYTHON[0], cwd=ctx.path,
+        quiet=waflib.Context.BOTH)
+    ctx.exec_command('%s -m twine upload %s' % (ctx.env.VPYTHON[0], wheel[0]), cwd=ctx.path,
+        stdout=None, stderr=None)
+
 
 def _pytest(bld):
 
-    python_path = \
-    [
-        bld.dependency_path('virtualenv'),
-    ]
 
-    bld_env = bld.env.derive()
-    bld_env.env = dict(os.environ)
-
-    separator = ';' if sys.platform == 'win32' else ':'
-    bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
-
-    # We use the binaries in the virtualenv
-    if sys.platform == 'win32':
-        folder = 'Scripts'
-        ext = '.exe'
-    else:
-        folder = 'bin'
-        ext = ''
-
-    host_python_binary = sys.executable
-
-    # Make a new virtual env for different host executables
-    virtualenv_hash = hashlib.sha1(
-        host_python_binary.encode('utf-8')).hexdigest()[:6]
-
-    virtualenv = 'pytest_environment_'+virtualenv_hash
-    python_binary = os.path.join(virtualenv, folder, 'python' + ext)
-    pip_binary = os.path.join(virtualenv, folder, 'pip' + ext)
-
-
-    bld(rule=host_python_binary+' -m virtualenv ' + virtualenv + ' --no-site-packages',
-        cwd=bld.path,
-        env=bld_env,
-        always=True)
-
-    bld.add_group()
-
-    bld(rule=python_binary+' -m pip install pytest',
+    bld(rule='${VPYTHON} -m pip install pytest',
         cwd=bld.path,
         always=True)
 
     bld.add_group()
 
     # Install the pytest-testdirectory plugin in the virtualenv
-    bld(rule=python_binary+' -m pip install -e .',
+    bld(rule='${VPYTHON} -m pip install -e .',
         cwd=bld.path,
         always=True)
 
@@ -112,7 +149,7 @@ def _pytest(bld):
     # Make python not write any .pyc files. These may linger around
     # in the file system and make some tests pass although their .py
     # counter-part has been e.g. deleted
-    command = python_binary + ' -B -m pytest test --basetemp ' + basetemp
+    command = '${VPYTHON} -B -m pytest test --basetemp ' + basetemp
 
     bld(rule=command,
         cwd=bld.path,

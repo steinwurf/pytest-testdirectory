@@ -1,5 +1,8 @@
 import os
 import io
+import re
+import sys
+
 from setuptools import setup, find_packages
 
 cwd = os.path.abspath(os.path.dirname(__file__))
@@ -7,9 +10,42 @@ cwd = os.path.abspath(os.path.dirname(__file__))
 with io.open(os.path.join(cwd, 'README.rst'), encoding='utf-8') as fd:
     long_description = fd.read()
 
+with io.open(os.path.join(cwd, 'wscript'), encoding='utf-8') as fd:
+
+    VERSION = None
+
+    regex = re.compile(
+    r"""
+    (                # Group and match
+        VERSION      #    Match 'VERSION'
+        \s*          #    Match zero or more spaces
+        =            #    Match and equal sign
+        \s*          #    Match zero or more spaces
+    )                # End group
+
+    '
+    (                # Group and match
+         \d\.\d\.\d  #    Match digit.digit.digit e.g. 1.2.3
+    )                # End of group
+    '
+    """, re.VERBOSE)
+
+    for line in fd:
+
+        match = regex.match(line)
+        if not match:
+            continue
+
+        # The second parenthesized subgroup.
+        VERSION = match.group(2)
+        break
+
+    else:
+        sys.exit('No VERSION variable defined in wscript - aborting!')
+
 setup(
     name='pytest-testdirectory',
-    version='1.0.0',
+    version=VERSION,
     description=('A py.test plugin providing temporary directories in '
                  'unit tests.'),
     long_description=long_description,
@@ -18,7 +54,7 @@ setup(
     author_email='contact@steinwurf.com',
     license='BSD 3-clause "New" or "Revised" License',
     classifiers=[
-        'Framework :: Pytest'
+        'Framework :: Pytest',
         'Development Status :: 5 - Production/Stable',
         'Environment :: Plugins',
         'Intended Audience :: Developers',
