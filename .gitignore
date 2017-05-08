@@ -13,4 +13,5 @@ pytest_environment_*
 *.pyc
 .cache
 .tox
-pytest
+pytest*
+virtualenv-*
