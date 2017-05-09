@@ -120,8 +120,11 @@ def upload(ctx):
 
     ctx.cmd_and_log('%s -m pip install twine' % ctx.env.VPYTHON[0], cwd=ctx.path,
         quiet=waflib.Context.BOTH)
-    ctx.exec_command('%s -m twine upload %s' % (ctx.env.VPYTHON[0], wheel[0]), cwd=ctx.path,
-        stdout=None, stderr=None)
+    ret = ctx.exec_command('%s -m twine upload %s' % (ctx.env.VPYTHON[0], wheel[0]),
+        cwd=ctx.path, stdout=None, stderr=None)
+
+    if ret != 0:
+        ctx.fatal('Upload failed!')
 
 
 def _pytest(bld):
