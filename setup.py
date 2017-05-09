@@ -69,6 +69,7 @@ setup(
     keywords=('pytest py.test '
               'testing unit tests plugin'),
     packages=find_packages(where='src', exclude=['test']),
+    package_dir={"": "src"},
     install_requires=['pytest'],
     entry_points={
         'pytest11': ['testdirectory = pytest_testdirectory.testdirectory'],
