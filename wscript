@@ -99,8 +99,14 @@ def build(bld):
         _pytest(bld=bld)
 
     # Build Universal Wheel
-    host_python_binary = sys.executable
-    bld(rule=host_python_binary+' setup.py bdist_wheel --universal',
+    bld.add_group()
+
+    # Install the pytest-testdirectory plugin in the virtualenv
+    bld(rule='${VPYTHON} -m pip install wheel',
+        cwd=bld.path,
+        always=True)
+
+    bld(rule='${VPYTHON} setup.py bdist_wheel --universal',
         cwd=bld.path,
         always=True)
 
