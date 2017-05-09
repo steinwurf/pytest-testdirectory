@@ -8,6 +8,10 @@ Latest
 ------
 * tbd
 
+1.0.2
+-----
+* Patch: Fail on errors in upload
+
 1.0.1
 -----
 * Patch: Testing release script
