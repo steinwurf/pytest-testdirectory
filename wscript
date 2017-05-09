@@ -106,6 +106,8 @@ def build(bld):
         cwd=bld.path,
         always=True)
 
+    bld.add_group()
+
     bld(rule='${VPYTHON} setup.py bdist_wheel --universal',
         cwd=bld.path,
         always=True)
