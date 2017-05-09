@@ -71,6 +71,6 @@ setup(
     packages=find_packages(where='src', exclude=['test']),
     install_requires=['pytest'],
     entry_points={
-        'pytest11': ['testdirectory = src.testdirectory'],
+        'pytest11': ['testdirectory = pytest_testdirectory.testdirectory'],
     },
 )

@@ -42,7 +42,7 @@ def options(opt):
         help='Run all unit tests')
 
     opt.add_option(
-        '--pytest_basetemp', default='pytest',
+        '--pytest_basetemp', default='pytest_temp',
         help='Set the basetemp folder where pytest executes the tests')
 
 @conf
