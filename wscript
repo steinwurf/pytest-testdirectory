@@ -45,36 +45,53 @@ def options(opt):
         '--pytest_basetemp', default='pytest',
         help='Set the basetemp folder where pytest executes the tests')
 
-@conf
-def create_virtualenv(conf, cwd, env, name):
 
-    # The Python executable
-    python = sys.executable
+class VirtualEnv(object):
 
-    if not name:
+    def __init__(self, path, ctx):
 
-        # Make a unique virtualenv for different Python executables (e.g. 2.x
-        # and 3.x)
-        unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
-        name = 'virtualenv-{}'.format(unique)
+        self.ctx = ctx
 
-    conf.start_msg('Create virtualenv')
+        self.env = dict(os.environ)
 
-    conf.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages',
-        cwd=cwd, env=env)
+        if 'PATH' in self.env:
+            del self.env['PATH']
 
-    conf.env["VENV_PATH"] = cwd.find_node(name).abspath()
+        if 'PYTHONPATH' in self.env:
+            del self.env['PYTHONPATH']
 
-    conf.end_msg(conf.env.VENV_PATH)
+        self.env['PATH'] = os.path.join(path, 'Scripts')
 
-    # We use the binaries in the virtualenv
-    if sys.platform == 'win32':
-        path_list = [os.path.join(conf.env.VENV_PATH, 'Scripts')]
-    else:
-        path_list = [os.path.join(conf.env.VENV_PATH, 'bin')]
+        if sys.platform == 'win32':
+            self.env['PATH'] = os.path.join(path, 'Scripts')
+        else:
+            self.env['PATH'] = os.path.join(path, 'bin')
 
-    conf.find_program('python', var="VPYTHON", mandatory=True,
-        path_list=path_list)
+    def run(self, cmd):
+        self.ctx.cmd_and_log(cmd, env=self.env)
+
+    @staticmethod
+    def create(cwd, name, ctx, env):
+
+        # The Python executable
+        python = sys.executable
+
+        if not name:
+
+            # Make a unique virtualenv for different Python executables (e.g. 2.x
+            # and 3.x)
+            unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
+            name = 'virtualenv-{}'.format(unique)
+
+        print('Create virtualenv')
+
+        ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages',
+            cwd=cwd, env=env)
+
+        return VirtualEnv(path=os.path.join(cwd, name), ctx=ctx)
+
+
+
 
 
 def configure(conf):
@@ -89,7 +106,13 @@ def configure(conf):
     separator = ';' if sys.platform == 'win32' else ':'
     env.update({'PYTHONPATH': separator.join(python_path)})
 
-    conf.create_virtualenv(cwd=conf.path, env=env, name=None)
+    venv = VirtualEnv.create(cwd=conf.path.abspath(), env=env, name=None, ctx=conf)
+
+    pip_packages = conf.path.make_node('pip_packages')
+    pip_packages.mkdir()
+
+    venv.run('python -c "import sys; print(sys.executable)"')
+    venv.run('python -m pip download pytest twine wheel --dest %s' % pip_packages.abspath())
 
 
 
@@ -108,6 +131,7 @@ def build(bld):
     bld(rule='${VPYTHON} setup.py bdist_wheel --universal',
         cwd=bld.path,
         always=True)
+
 
 def upload(ctx):
 
