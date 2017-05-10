@@ -49,7 +49,11 @@ def options(opt):
 class VirtualEnv(object):
 
     def __init__(self, path, ctx):
+        """
+        Wraps a create virtualenv
+        """
 
+        self.path = path
         self.ctx = ctx
 
         self.env = dict(os.environ)
@@ -68,10 +72,17 @@ class VirtualEnv(object):
             self.env['PATH'] = os.path.join(path, 'bin')
 
     def run(self, cmd):
+        """
+        """
         self.ctx.cmd_and_log(cmd, env=self.env)
 
     @staticmethod
-    def create(cwd, name, ctx, env):
+    def create(cwd, name, ctx):
+
+        venv_path = ctx.dependency_path('virtualenv')
+
+        env = dict(os.environ)
+        env.update({'PYTHONPATH': os.path.pathsep.join(venv_path)})
 
         # The Python executable
         python = sys.executable
@@ -90,29 +101,36 @@ class VirtualEnv(object):
 
         return VirtualEnv(path=os.path.join(cwd, name), ctx=ctx)
 
+class TemporaryEnv(VirtualEnv):
+    def __init__(self, path, ctx):
+        super(TemporaryEnv, self).__init__(path, ctx)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        waflib.extras.wurf.directory.remove_directory(
+            path=self.path)
+
+    @staticmethod
+    def create(cwd, name, ctx):
+        return VirtualEnv.create(cwd=cwd, name=name, ctx=ctx)
 
 
 
 
 def configure(conf):
 
-    # Create virtualenv
-    python_path = \
-    [
-        conf.dependency_path('virtualenv'),
-    ]
 
-    env = dict(os.environ)
-    separator = ';' if sys.platform == 'win32' else ':'
-    env.update({'PYTHONPATH': separator.join(python_path)})
 
-    venv = VirtualEnv.create(cwd=conf.path.abspath(), env=env, name=None, ctx=conf)
 
-    pip_packages = conf.path.make_node('pip_packages')
-    pip_packages.mkdir()
+    with TemporaryEnv.create(cwd=conf.path.abspath(), name=None, ctx=conf) as venv:
 
-    venv.run('python -c "import sys; print(sys.executable)"')
-    venv.run('python -m pip download pytest twine wheel --dest %s' % pip_packages.abspath())
+        pip_packages = conf.path.make_node('pip_packages')
+        pip_packages.mkdir()
+
+        venv.run('python -c "import sys; print(sys.executable)"')
+        venv.run('python -m pip download pytest twine wheel --dest %s' % pip_packages.abspath())
 
 
 
