@@ -76,6 +76,13 @@ class VirtualEnv(object):
         """
         self.ctx.cmd_and_log(cmd, env=self.env)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        waflib.extras.wurf.directory.remove_directory(
+            path=self.virtualenv.path)
+
     @staticmethod
     def create(cwd, name, ctx):
 
@@ -96,35 +103,19 @@ class VirtualEnv(object):
 
         print('Create virtualenv')
 
+        print("cwd {}".format(cwd))
+
         ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages',
             cwd=cwd, env=env)
 
         return VirtualEnv(path=os.path.join(cwd, name), ctx=ctx)
 
-class TemporaryEnv(VirtualEnv):
-    def __init__(self, path, ctx):
-        super(TemporaryEnv, self).__init__(path, ctx)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        waflib.extras.wurf.directory.remove_directory(
-            path=self.path)
-
-    @staticmethod
-    def create(cwd, name, ctx):
-        return VirtualEnv.create(cwd=cwd, name=name, ctx=ctx)
-
-
-
-
 def configure(conf):
 
 
+    venv = VirtualEnv.create(cwd=conf.path.abspath(), name=None, ctx=conf)
 
-
-    with TemporaryEnv.create(cwd=conf.path.abspath(), name=None, ctx=conf) as venv:
+    with venv:
 
         pip_packages = conf.path.make_node('pip_packages')
         pip_packages.mkdir()
