@@ -212,6 +212,8 @@ def _pytest(bld):
         wheel = _find_wheel(ctx=bld)
 
         venv.run('python -m pip install {}'.format(wheel))
+        venv.run('python -m pip list')
+        venv.run('python -m pip --version')
 
         # We override the pytest temp folder with the basetemp option,
         # so the test folders will be available at the specified location
