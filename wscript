@@ -74,14 +74,45 @@ class VirtualEnv(object):
     def run(self, cmd):
         """
         """
-        self.ctx.cmd_and_log(cmd, env=self.env)
+        ret = self.ctx.exec_command(cmd, env=self.env, stdout=None, stderr=None)
+
+        if ret != 0:
+            self.ctx.fatal('Exec command failed!')
+
+    def pip_download(self, path, packages):
+        """ Downloads a set of packages from pip.
+
+        :param path: The path where the packages should be stored as a string
+        :param packages: A list of package names as string, which should be
+            downloaded.
+        """
+        packages = " ".join(packages)
+
+        self.run('python -m pip download {} --dest {}'.format(packages, path))
+
+    def pip_local_install(self, path, packages):
+        """ Installs a set of packages from pip, using local packages from the
+        path directory.
+
+        :param path: The path where the packages are stored as a string
+        :param packages: A list of package names as string, which should be
+            downloaded.
+        """
+        packages = " ".join(packages)
+
+        self.run('python -m pip install --no-index --find-links={} {}'.format(
+            path, packages))
+
 
     def __enter__(self):
+        """ When used in a with statement the virtualenv will be automatically
+        revmoved.
+        """
         return self
 
     def __exit__(self, type, value, traceback):
-        waflib.extras.wurf.directory.remove_directory(
-            path=self.virtualenv.path)
+        """ Remove the virtualenv. """
+        waflib.extras.wurf.directory.remove_directory(path=self.path)
 
     @staticmethod
     def create(cwd, name, ctx):
@@ -110,6 +141,7 @@ class VirtualEnv(object):
 
         return VirtualEnv(path=os.path.join(cwd, name), ctx=ctx)
 
+
 def configure(conf):
 
 
@@ -120,36 +152,45 @@ def configure(conf):
         pip_packages = conf.path.make_node('pip_packages')
         pip_packages.mkdir()
 
-        venv.run('python -c "import sys; print(sys.executable)"')
-        venv.run('python -m pip download pytest twine wheel --dest %s' % pip_packages.abspath())
-
+        venv.pip_download(path=pip_packages.abspath(),
+            packages=['pytest', 'twine', 'wheel'])
 
 
 def build(bld):
 
+    # Build Universal Wheel
+    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
+
+    with venv:
+        pip_packages = bld.path.find_node('pip_packages')
+
+        venv.pip_local_install(path=pip_packages.abspath(), packages=['wheel'])
+        venv.run('python setup.py bdist_wheel --universal')
+
+
     if bld.options.run_tests:
         _pytest(bld=bld)
 
-    # Build Universal Wheel
-    bld(rule='${VPYTHON} -m pip install wheel',
-        cwd=bld.path,
-        always=True)
-
-    bld.add_group()
-
-    bld(rule='${VPYTHON} setup.py bdist_wheel --universal',
-        cwd=bld.path,
-        always=True)
-
-
-def upload(ctx):
+def _find_wheel(ctx):
+    """ Find the .whl file in the dist folder. """
 
     wheel = ctx.path.ant_glob('dist/*-'+VERSION+'-*.whl')
 
     if not len(wheel) == 1:
-        ctx.fatal('No wheel to upload (or version mismatch)')
+        ctx.fatal('No wheel found (or version mismatch)')
     else:
-        Logs.info('Wheel %s', wheel[0])
+        wheel = wheel[0]
+        Logs.info('Wheel %s', wheel)
+        return wheel
+
+def upload(ctx):
+
+    wheel = _find_wheel(ctx=ctx)
+
+    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
+
+    with venv:
+        venv.cmd_and_log('')
 
     ctx.cmd_and_log('%s -m pip install twine' % ctx.env.VPYTHON[0], cwd=ctx.path,
         quiet=waflib.Context.BOTH)
@@ -159,41 +200,31 @@ def upload(ctx):
     if ret != 0:
         ctx.fatal('Upload failed!')
 
-
 def _pytest(bld):
 
+    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
 
-    bld(rule='${VPYTHON} -m pip install pytest',
-        cwd=bld.path,
-        always=True)
+    with venv:
+        pip_packages = bld.path.find_node('pip_packages')
+        venv.pip_local_install(path=pip_packages.abspath(), packages=['pytest'])
 
-    bld.add_group()
+        # Install the pytest-testdirectory plugin in the virtualenv
+        wheel = _find_wheel(ctx=bld)
 
-    # Install the pytest-testdirectory plugin in the virtualenv
-    bld(rule='${VPYTHON} -m pip install -e .',
-        cwd=bld.path,
-        always=True)
+        venv.run('python -m pip install {}'.format(wheel))
 
-    bld.add_group()
+        # We override the pytest temp folder with the basetemp option,
+        # so the test folders will be available at the specified location
+        # on all platforms. The default location is the "pytest" local folder.
+        basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
 
-    # We override the pytest temp folder with the basetemp option,
-    # so the test folders will be available at the specified location
-    # on all platforms. The default location is the "pytest" local folder.
-    basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
+        # We need to manually remove the previously created basetemp folder,
+        # because pytest uses os.listdir in the removal process, and that fails
+        # if there are any broken symlinks in that folder.
+        if os.path.exists(basetemp):
+            waflib.extras.wurf.directory.remove_directory(path=basetemp)
 
-    # We need to manually remove the previously created basetemp folder,
-    # because pytest uses os.listdir in the removal process, and that fails
-    # if there are any broken symlinks in that folder.
-    if os.path.exists(basetemp):
-        waflib.extras.wurf.directory.remove_directory(path=basetemp)
-
-    # Make python not write any .pyc files. These may linger around
-    # in the file system and make some tests pass although their .py
-    # counter-part has been e.g. deleted
-    command = '${VPYTHON} -B -m pytest test --basetemp ' + basetemp
-
-    bld(rule=command,
-        cwd=bld.path,
-        always=True)
-
-    bld.add_group()
+        # Make python not write any .pyc files. These may linger around
+        # in the file system and make some tests pass although their .py
+        # counter-part has been e.g. deleted
+        venv.run('python -B -m pytest test --basetemp {}'.format(basetemp))
