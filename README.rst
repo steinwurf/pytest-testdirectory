@@ -103,3 +103,7 @@ Notes
   avoid accidentally having access to resources not added to the Python
   package your users will install...
 * Python packaging guide: https://packaging.python.org/distributing/
+* For the initially release I had misunderstood how to correctly setup the entry
+  point. However, the local unit-tests worked, it only failed when the package
+  was installed in other projects. The question why it worked locally was quite
+  strange. Turns out  

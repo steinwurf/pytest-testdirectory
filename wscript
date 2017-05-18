@@ -161,16 +161,19 @@ def build(bld):
     # Build Universal Wheel
     venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
 
-    #with venv:
-    if True:
+    with venv:
         pip_packages = bld.path.find_node('pip_packages')
 
-        #venv.pip_local_install(path=pip_packages.abspath(), packages=['wheel'])
-        #venv.run('python setup.py bdist_wheel --universal')
+        venv.pip_local_install(path=pip_packages.abspath(), packages=['wheel'])
+        venv.run('python setup.py bdist_wheel --universal')
 
+    egg_info = os.path.join(bld.path.abspath(), 'pytest_testdirectory.egg-info')
 
-    #if bld.options.run_tests:
-    #    _pytest(bld=bld)
+    if os.path.isdir(egg_info):
+        waflib.extras.wurf.directory.remove_directory(path=egg_info)
+
+    if bld.options.run_tests:
+        _pytest(bld=bld)
 
 def _find_wheel(ctx):
     """ Find the .whl file in the dist folder. """
@@ -203,14 +206,12 @@ def upload(ctx):
 
 def _pytest(bld):
 
-    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
+    venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
 
-    #with venv:
-    if True:
+    with venv:
         pip_packages = bld.path.find_node('pip_packages')
         venv.pip_local_install(path=pip_packages.abspath(), packages=['pytest'])
 
-        return
         # Install the pytest-testdirectory plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)
 
