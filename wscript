@@ -136,7 +136,7 @@ class VirtualEnv(object):
 
         print("cwd {}".format(cwd))
 
-        ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages',
+        ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages --clear',
             cwd=cwd, env=env)
 
         return VirtualEnv(path=os.path.join(cwd, name), ctx=ctx)
@@ -159,17 +159,18 @@ def configure(conf):
 def build(bld):
 
     # Build Universal Wheel
-    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
+    venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
 
-    with venv:
+    #with venv:
+    if True:
         pip_packages = bld.path.find_node('pip_packages')
 
-        venv.pip_local_install(path=pip_packages.abspath(), packages=['wheel'])
-        venv.run('python setup.py bdist_wheel --universal')
+        #venv.pip_local_install(path=pip_packages.abspath(), packages=['wheel'])
+        #venv.run('python setup.py bdist_wheel --universal')
 
 
-    if bld.options.run_tests:
-        _pytest(bld=bld)
+    #if bld.options.run_tests:
+    #    _pytest(bld=bld)
 
 def _find_wheel(ctx):
     """ Find the .whl file in the dist folder. """
@@ -204,14 +205,16 @@ def _pytest(bld):
 
     venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
 
-    with venv:
+    #with venv:
+    if True:
         pip_packages = bld.path.find_node('pip_packages')
         venv.pip_local_install(path=pip_packages.abspath(), packages=['pytest'])
 
+        return
         # Install the pytest-testdirectory plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)
 
-        venv.run('python -m pip install {}'.format(wheel))
+        #venv.run('python -m pip install {}'.format(wheel))
         venv.run('python -m pip list')
         venv.run('python -m pip --version')
 
