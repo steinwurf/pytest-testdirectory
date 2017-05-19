@@ -50,7 +50,7 @@ class VirtualEnv(object):
 
     def __init__(self, cwd, path, ctx):
         """
-        Wraps a create virtualenv
+        Wraps a created virtualenv
         """
 
         self.path = path
