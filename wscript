@@ -123,7 +123,7 @@ class VirtualEnv(object):
         venv_path = ctx.dependency_path('virtualenv')
 
         env = dict(os.environ)
-        env.update({'PYTHONPATH': os.path.pathsep.join(venv_path)})
+        env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
 
         # The Python executable
         python = sys.executable
