@@ -73,8 +73,7 @@ class VirtualEnv(object):
             self.env['PATH'] = os.path.join(path, 'bin')
 
     def run(self, cmd):
-        """
-        """
+        """ Runs a command in the virtualenv. """
         ret = self.ctx.exec_command(cmd, cwd=self.cwd, env=self.env,
             stdout=None, stderr=None)
 
@@ -118,6 +117,14 @@ class VirtualEnv(object):
 
     @staticmethod
     def create(cwd, name, ctx):
+        """ Create a new virtual env.
+
+        :param cwd: The working directory, as a string, where the virtualenv
+            will be created and where the commands will run.
+        :param name: The name of the virtualenv, as a string. If None a default
+            name will be used.
+        :param ctx: The Waf Context used to run commands.
+        """
 
         # Make sure the virtualenv Python module is in path
         venv_path = ctx.dependency_path('virtualenv')
@@ -140,6 +147,7 @@ class VirtualEnv(object):
         if os.path.isdir(path):
             waflib.extras.wurf.directory.remove_directory(path=path)
 
+        # Create the new virtualenv
         ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages --clear',
             cwd=cwd, env=env)
 
@@ -182,6 +190,7 @@ def build(bld):
     if bld.options.run_tests:
         _pytest(bld=bld)
 
+
 def _find_wheel(ctx):
     """ Find the .whl file in the dist folder. """
 
@@ -193,6 +202,7 @@ def _find_wheel(ctx):
         wheel = wheel[0]
         Logs.info('Wheel %s', wheel)
         return wheel
+
 
 def upload(ctx):
     """ Upload the built wheel to PyPI (the Python Package Index) """
