@@ -119,6 +119,7 @@ class VirtualEnv(object):
     @staticmethod
     def create(cwd, name, ctx):
 
+        # Make sure the virtualenv Python module is in path
         venv_path = ctx.dependency_path('virtualenv')
 
         env = dict(os.environ)
@@ -134,10 +135,15 @@ class VirtualEnv(object):
             unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
             name = 'virtualenv-{}'.format(unique)
 
+        # If a virtualenv already exists - lets remove it
+        path = os.path.join(cwd, name)
+        if os.path.isdir(path):
+            waflib.extras.wurf.directory.remove_directory(path=path)
+
         ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages --clear',
             cwd=cwd, env=env)
 
-        return VirtualEnv(path=os.path.join(cwd, name), cwd=cwd, ctx=ctx)
+        return VirtualEnv(path=path, cwd=cwd, ctx=ctx)
 
 
 def configure(conf):
