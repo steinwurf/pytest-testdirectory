@@ -48,12 +48,13 @@ def options(opt):
 
 class VirtualEnv(object):
 
-    def __init__(self, path, ctx):
+    def __init__(self, cwd, path, ctx):
         """
         Wraps a create virtualenv
         """
 
         self.path = path
+        self.cwd = cwd
         self.ctx = ctx
 
         self.env = dict(os.environ)
@@ -74,7 +75,8 @@ class VirtualEnv(object):
     def run(self, cmd):
         """
         """
-        ret = self.ctx.exec_command(cmd, env=self.env, stdout=None, stderr=None)
+        ret = self.ctx.exec_command(cmd, cwd=self.cwd, env=self.env,
+            stdout=None, stderr=None)
 
         if ret != 0:
             self.ctx.fatal('Exec command failed!')
@@ -132,18 +134,13 @@ class VirtualEnv(object):
             unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
             name = 'virtualenv-{}'.format(unique)
 
-        print('Create virtualenv')
-
-        print("cwd {}".format(cwd))
-
         ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages --clear',
             cwd=cwd, env=env)
 
-        return VirtualEnv(path=os.path.join(cwd, name), ctx=ctx)
+        return VirtualEnv(path=os.path.join(cwd, name), cwd=cwd, ctx=ctx)
 
 
 def configure(conf):
-
 
     venv = VirtualEnv.create(cwd=conf.path.abspath(), name=None, ctx=conf)
 
@@ -158,8 +155,8 @@ def configure(conf):
 
 def build(bld):
 
-    # Build Universal Wheel
-    venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
+    # Create a virtualenv in the source folder and build universal wheel
+    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
 
     with venv:
         pip_packages = bld.path.find_node('pip_packages')
@@ -167,11 +164,15 @@ def build(bld):
         venv.pip_local_install(path=pip_packages.abspath(), packages=['wheel'])
         venv.run('python setup.py bdist_wheel --universal')
 
+    # Delete the egg-info directory, do not understand why this is created
+    # when we build a wheel. But, it is - perhaps in the future there will
+    # be some way to disable its creation.
     egg_info = os.path.join(bld.path.abspath(), 'pytest_testdirectory.egg-info')
 
     if os.path.isdir(egg_info):
         waflib.extras.wurf.directory.remove_directory(path=egg_info)
 
+    # Run the unit-tests
     if bld.options.run_tests:
         _pytest(bld=bld)
 
@@ -188,41 +189,41 @@ def _find_wheel(ctx):
         return wheel
 
 def upload(ctx):
-
-    wheel = _find_wheel(ctx=ctx)
-
-    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
-
-    with venv:
-        venv.cmd_and_log('')
-
-    ctx.cmd_and_log('%s -m pip install twine' % ctx.env.VPYTHON[0], cwd=ctx.path,
-        quiet=waflib.Context.BOTH)
-    ret = ctx.exec_command('%s -m twine upload %s' % (ctx.env.VPYTHON[0], wheel[0]),
-        cwd=ctx.path, stdout=None, stderr=None)
-
-    if ret != 0:
-        ctx.fatal('Upload failed!')
-
-def _pytest(bld):
+    """ Upload the built wheel to PyPI (the Python Package Index) """
 
     venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
 
     with venv:
         pip_packages = bld.path.find_node('pip_packages')
-        venv.pip_local_install(path=pip_packages.abspath(), packages=['pytest'])
+        venv.pip_local_install(path=pip_packages.abspath(),
+            packages=['twine'])
+
+        wheel = _find_wheel(ctx=ctx)
+
+        venv.run('python -m twine upload {}'.format(wheel))
+
+
+def _pytest(bld):
+
+    # Create the virtualenv in the build folder to make sure we run
+    # isolated from the sources
+    venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
+
+    with venv:
+        pip_packages = bld.path.find_node('pip_packages')
+        venv.pip_local_install(path=pip_packages.abspath(),
+            packages=['pytest'])
 
         # Install the pytest-testdirectory plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)
 
-        #venv.run('python -m pip install {}'.format(wheel))
-        venv.run('python -m pip list')
-        venv.run('python -m pip --version')
+        venv.run('python -m pip install {}'.format(wheel))
 
         # We override the pytest temp folder with the basetemp option,
         # so the test folders will be available at the specified location
         # on all platforms. The default location is the "pytest" local folder.
-        basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
+        basetemp = os.path.abspath(os.path.expanduser(
+            bld.options.pytest_basetemp))
 
         # We need to manually remove the previously created basetemp folder,
         # because pytest uses os.listdir in the removal process, and that fails
@@ -230,7 +231,10 @@ def _pytest(bld):
         if os.path.exists(basetemp):
             waflib.extras.wurf.directory.remove_directory(path=basetemp)
 
+        testdir = bld.path.find_node('test')
+
         # Make python not write any .pyc files. These may linger around
         # in the file system and make some tests pass although their .py
         # counter-part has been e.g. deleted
-        venv.run('python -B -m pytest test --basetemp {}'.format(basetemp))
+        venv.run('python -B -m pytest {} --basetemp {}'.format(
+            testdir.abspath(), basetemp))

@@ -18,3 +18,4 @@ pytest_temp
 virtualenv-*
 dist
 pytest_testdirectory.egg-info
+pip_packages
