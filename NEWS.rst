@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+2.0.0
+-----
 * Minor: Added virtualenv wrapper.
 * Major: Fix entry broken entry point. Previous versions where not usable
   when installed via pip.
