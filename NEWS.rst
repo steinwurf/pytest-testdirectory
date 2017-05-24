@@ -4,9 +4,9 @@ News for pytest-testdirectory
 This file lists the major changes between versions. For a more detailed list
 of every change, see the Git log.
 
-Latest
 ------
-* tbd
+* Major: Fix entry broken entry point. Previous versions where not usable
+  when installed via pip.
 
 1.0.2
 -----

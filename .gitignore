@@ -13,5 +13,9 @@ pytest_environment_*
 *.pyc
 .cache
 .tox
-pytest*
+pytest_environment_*
+pytest_temp
 virtualenv-*
+dist
+pytest_testdirectory.egg-info
+pip_packages
