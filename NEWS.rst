@@ -6,7 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Patch: Remove VirtualEnv wrapper from wscript. Instead that functionality has
+  been moved to waf.
 
 2.0.0
 -----
