@@ -46,136 +46,37 @@ def options(opt):
         help='Set the basetemp folder where pytest executes the tests')
 
 
-class VirtualEnv(object):
+def _create_virtualenv(ctx, cwd):
+    # Make sure the virtualenv Python module is in path
+    venv_path = ctx.dependency_path('virtualenv')
 
-    def __init__(self, cwd, path, ctx):
-        """
-        Wraps a created virtualenv
-        """
+    env = dict(os.environ)
+    env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
 
-        self.path = path
-        self.cwd = cwd
-        self.ctx = ctx
-
-        self.env = dict(os.environ)
-
-        if 'PATH' in self.env:
-            del self.env['PATH']
-
-        if 'PYTHONPATH' in self.env:
-            del self.env['PYTHONPATH']
-
-        self.env['PATH'] = os.path.join(path, 'Scripts')
-
-        if sys.platform == 'win32':
-            self.env['PATH'] = os.path.join(path, 'Scripts')
-        else:
-            self.env['PATH'] = os.path.join(path, 'bin')
-
-    def run(self, cmd):
-        """ Runs a command in the virtualenv. """
-        ret = self.ctx.exec_command(cmd, cwd=self.cwd, env=self.env,
-            stdout=None, stderr=None)
-
-        if ret != 0:
-            self.ctx.fatal('Exec command failed!')
-
-    def pip_download(self, path, packages):
-        """ Downloads a set of packages from pip.
-
-        :param path: The path where the packages should be stored as a string
-        :param packages: A list of package names as string, which should be
-            downloaded.
-        """
-        packages = " ".join(packages)
-
-        self.run('python -m pip download {} --dest {}'.format(packages, path))
-
-    def pip_local_install(self, path, packages):
-        """ Installs a set of packages from pip, using local packages from the
-        path directory.
-
-        :param path: The path where the packages are stored as a string
-        :param packages: A list of package names as string, which should be
-            downloaded.
-        """
-        packages = " ".join(packages)
-
-        self.run('python -m pip install --no-index --find-links={} {}'.format(
-            path, packages))
-
-
-    def __enter__(self):
-        """ When used in a with statement the virtualenv will be automatically
-        revmoved.
-        """
-        return self
-
-    def __exit__(self, type, value, traceback):
-        """ Remove the virtualenv. """
-        waflib.extras.wurf.directory.remove_directory(path=self.path)
-
-    @staticmethod
-    def create(cwd, name, ctx):
-        """ Create a new virtual env.
-
-        :param cwd: The working directory, as a string, where the virtualenv
-            will be created and where the commands will run.
-        :param name: The name of the virtualenv, as a string. If None a default
-            name will be used.
-        :param ctx: The Waf Context used to run commands.
-        """
-
-        # Make sure the virtualenv Python module is in path
-        venv_path = ctx.dependency_path('virtualenv')
-
-        env = dict(os.environ)
-        env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
-
-        # The Python executable
-        python = sys.executable
-
-        if not name:
-
-            # Make a unique virtualenv for different Python executables (e.g. 2.x
-            # and 3.x)
-            unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
-            name = 'virtualenv-{}'.format(unique)
-
-        # If a virtualenv already exists - lets remove it
-        path = os.path.join(cwd, name)
-        if os.path.isdir(path):
-            waflib.extras.wurf.directory.remove_directory(path=path)
-
-        # Create the new virtualenv
-        ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages --clear',
-            cwd=cwd, env=env)
-
-        return VirtualEnv(path=path, cwd=cwd, ctx=ctx)
+    from waflib.extras.wurf.virtualenv import VirtualEnv
+    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx,
+        pip_packages_path=os.path.join(ctx.path.abspath(), 'pip_packages'))
 
 
 def configure(conf):
 
-    venv = VirtualEnv.create(cwd=conf.path.abspath(), name=None, ctx=conf)
+    venv = _create_virtualenv(ctx=conf, cwd=conf.path.abspath())
 
     with venv:
 
         pip_packages = conf.path.make_node('pip_packages')
         pip_packages.mkdir()
 
-        venv.pip_download(path=pip_packages.abspath(),
-            packages=['pytest', 'twine', 'wheel'])
+        venv.pip_download('pytest', 'twine', 'wheel')
 
 
 def build(bld):
 
     # Create a virtualenv in the source folder and build universal wheel
-    venv = VirtualEnv.create(cwd=bld.path.abspath(), name=None, ctx=bld)
+    venv = _create_virtualenv(cwd=bld.path.abspath(), ctx=bld)
 
     with venv:
-        pip_packages = bld.path.find_node('pip_packages')
-
-        venv.pip_local_install(path=pip_packages.abspath(), packages=['wheel'])
+        venv.pip_local_install('wheel')
         venv.run('python setup.py bdist_wheel --universal')
 
     # Delete the egg-info directory, do not understand why this is created
@@ -207,12 +108,10 @@ def _find_wheel(ctx):
 def upload(bld):
     """ Upload the built wheel to PyPI (the Python Package Index) """
 
-    venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
+    venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
 
     with venv:
-        pip_packages = bld.path.find_node('pip_packages')
-        venv.pip_local_install(path=pip_packages.abspath(),
-            packages=['twine'])
+        venv.pip_local_install('twine')
 
         wheel = _find_wheel(ctx=bld)
 
@@ -223,12 +122,10 @@ def _pytest(bld):
 
     # Create the virtualenv in the build folder to make sure we run
     # isolated from the sources
-    venv = VirtualEnv.create(cwd=bld.bldnode.abspath(), name=None, ctx=bld)
+    venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
 
     with venv:
-        pip_packages = bld.path.find_node('pip_packages')
-        venv.pip_local_install(path=pip_packages.abspath(),
-            packages=['pytest'])
+        venv.pip_local_install('pytest')
 
         # Install the pytest-testdirectory plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)
