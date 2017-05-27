@@ -241,24 +241,29 @@ class TestDirectory(object):
         :return: A RunResult object representing the result of the command
         """
 
-        if 'env' in kwargs:
-            env = kwargs['env']
-            del kwargs['env']
-        else:
-            env = os.environ.copy()
+
+
+        if 'env' not in kwargs:
+            kwargs['env'] = os.environ.copy()
+
+        if 'stdout' not in kwargs:
+            kwargs['stdout'] = subprocess.PIPE
+
+        if 'stderr' not in kwargs:
+            kwargs['stderr'] = subprocess.PIPE
+
+        if 'cwd' not in kwargs:
+            # Sets the current working directory to the path of
+            # the tmpdir
+            kwargs['cwd'] = str(self.tmpdir)
 
         start_time = time.time()
 
         popen = subprocess.Popen(args,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    # Need to decode the stdout and stderr with the correct
-                    # character encoding (http://stackoverflow.com/a/28996987)
-                    universal_newlines=True,
-                    env=env,
-                    # Sets the current working directory to the path of
-                    # the tmpdir
-                    cwd=str(self.tmpdir))
+            # Need to decode the stdout and stderr with the correct
+            # character encoding (http://stackoverflow.com/a/28996987)
+            universal_newlines=True,
+            **kwargs)
 
         stdout, stderr = popen.communicate()
 

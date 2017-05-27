@@ -1,5 +1,12 @@
 import os
 
+def test_run(testdirectory):
+
+    testdirectory.run('python','--version')
+
+    testdirectory.run('python','--version', stdout=None, stderr=None)
+
+
 def test_testdirectory(testdirectory):
     """ Unit test for the testdirectory fixture"""
     assert os.path.exists(testdirectory.path())
