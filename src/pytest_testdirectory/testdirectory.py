@@ -232,18 +232,15 @@ class TestDirectory(object):
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.
 
-        If 'env' is not passed as keyword argument use a copy of the
-        current environment.
-
         :param args: List of arguments
         :param kwargs: Keyword arguments passed to Popen(...)
 
         :return: A RunResult object representing the result of the command
         """
 
-
-
         if 'env' not in kwargs:
+            # If 'env' is not passed as keyword argument use a copy of the
+            # current environment.
             kwargs['env'] = os.environ.copy()
 
         if 'stdout' not in kwargs:
@@ -269,8 +266,9 @@ class TestDirectory(object):
 
         end_time = time.time()
 
-        result = runresult.RunResult(' '.join(args), self.path(),
-            stdout, stderr, popen.returncode, end_time - start_time)
+        result = runresult.RunResult(command=' '.join(args), path=self.path(),
+            stdout=stdout, stderr=stderr, returncode=popen.returncode,
+            time=end_time - start_time)
 
         if popen.returncode != 0:
             raise runresulterror.RunResultError(result)
