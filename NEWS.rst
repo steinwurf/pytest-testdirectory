@@ -8,6 +8,8 @@ Latest
 ------
 * Patch: Remove VirtualEnv wrapper from wscript. Instead that functionality has
   been moved to waf.
+  Minor: Better handeling of keyword arguments to the testdirectory run(...)
+  method.
 
 2.0.0
 -----

@@ -7,6 +7,7 @@ import os
 
 from . import runresult
 from . import runresulterror
+from . import checkoutput
 
 @pytest.fixture
 def testdirectory(tmpdir):
@@ -45,6 +46,8 @@ class TestDirectory(object):
 
     Inspiration:
      - http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
+     - pytest internal plugin for doing the same thing:
+           https://github.com/pytest-dev/pytest/blob/master/_pytest/capture.py
     """
     def __init__(self, tmpdir):
 
@@ -232,40 +235,52 @@ class TestDirectory(object):
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.
 
-        If 'env' is not passed as keyword argument use a copy of the
-        current environment.
-
         :param args: List of arguments
         :param kwargs: Keyword arguments passed to Popen(...)
 
         :return: A RunResult object representing the result of the command
         """
 
-        if 'env' in kwargs:
-            env = kwargs['env']
-            del kwargs['env']
-        else:
-            env = os.environ.copy()
+        if 'env' not in kwargs:
+            # If 'env' is not passed as keyword argument use a copy of the
+            # current environment.
+            kwargs['env'] = os.environ.copy()
+
+        if 'stdout' not in kwargs:
+            kwargs['stdout'] = subprocess.PIPE
+
+        if 'stderr' not in kwargs:
+            kwargs['stderr'] = subprocess.PIPE
+
+        if 'cwd' not in kwargs:
+            # Sets the current working directory to the path of
+            # the tmpdir
+            kwargs['cwd'] = str(self.tmpdir)
 
         start_time = time.time()
 
         popen = subprocess.Popen(args,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    # Need to decode the stdout and stderr with the correct
-                    # character encoding (http://stackoverflow.com/a/28996987)
-                    universal_newlines=True,
-                    env=env,
-                    # Sets the current working directory to the path of
-                    # the tmpdir
-                    cwd=str(self.tmpdir))
+            # Need to decode the stdout and stderr with the correct
+            # character encoding (http://stackoverflow.com/a/28996987)
+            universal_newlines=True,
+            **kwargs)
 
         stdout, stderr = popen.communicate()
 
         end_time = time.time()
 
-        result = runresult.RunResult(' '.join(args), self.path(),
-            stdout, stderr, popen.returncode, end_time - start_time)
+        # The stdout and stderr are wrapped in a CheckOutput object to make
+        # it easy to assert whether it contains specific data / strings.
+
+        if stdout is not None:
+            stdout = checkoutput.CheckOutput(output=stdout)
+
+        if stderr is not None:
+            stderr = checkoutput.CheckOutput(output=stderr)
+
+        result = runresult.RunResult(command=' '.join(args), path=self.path(),
+            stdout=stdout, stderr=stderr, returncode=popen.returncode,
+            time=end_time - start_time)
 
         if popen.returncode != 0:
             raise runresulterror.RunResultError(result)
