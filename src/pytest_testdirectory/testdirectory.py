@@ -7,6 +7,7 @@ import os
 
 from . import runresult
 from . import runresulterror
+from . import checkoutput
 
 @pytest.fixture
 def testdirectory(tmpdir):
@@ -45,6 +46,8 @@ class TestDirectory(object):
 
     Inspiration:
      - http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
+     - pytest internal plugin for doing the same thing:
+           https://github.com/pytest-dev/pytest/blob/master/_pytest/capture.py
     """
     def __init__(self, tmpdir):
 
@@ -265,6 +268,15 @@ class TestDirectory(object):
         stdout, stderr = popen.communicate()
 
         end_time = time.time()
+
+        # The stdout and stderr are wrapped in a CheckOutput object to make
+        # it easy to assert whether it contains specific data / strings.
+
+        if stdout is not None:
+            stdout = checkoutput.CheckOutput(output=stdout)
+
+        if stderr is not None:
+            stderr = checkoutput.CheckOutput(output=stderr)
 
         result = runresult.RunResult(command=' '.join(args), path=self.path(),
             stdout=stdout, stderr=stderr, returncode=popen.returncode,

@@ -1,5 +1,3 @@
-from . import checkoutput
-
 # String used when printing a RunResult
 run_string = """RunResult
 command:\n{}
@@ -28,11 +26,8 @@ class RunResult:
 
         self.command = command
         self.path = path
-
-        # The stdout and stderr are wrapped in a CheckOutput object to make
-        # it easy to assert whether it contains specific data / strings.
-        self.stdout = checkoutput.CheckOutput(stdout)
-        self.stderr = checkoutput.CheckOutput(stderr)
+        self.stdout = stdout
+        self.stderr = stderr
         self.returncode = returncode
         self.time = time
 
