@@ -250,7 +250,7 @@ class TestDirectory(object):
 
         return True
 
-    def run(self, *args, **kwargs):
+    def run(self, args, **kwargs):
         """Runs the command in the test directory.
 
         :param args: List of arguments
@@ -258,6 +258,9 @@ class TestDirectory(object):
 
         :return: A RunResult object representing the result of the command
         """
+
+        if isinstance(cmd, str):
+            kwargs['shell'] = True
 
         if 'env' not in kwargs:
             # If 'env' is not passed as keyword argument use a copy of the
