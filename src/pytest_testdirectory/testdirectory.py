@@ -314,11 +314,11 @@ class TestDirectory(object):
         os_symlink = getattr(os, "symlink", None)
         if not callable(os_symlink) and sys.platform == 'win32':
 
-            def symlink_windows(target, link_path):
+            def symlink_windows(source, link_name):
                 # mklink is used to create an NTFS junction, i.e. symlink
                 cmd = ['mklink', #'/J',
-                       '\"{}\"'.format(link_path.replace('/', '\\')),
-                       '\"{}\"'.format(target.replace('/', '\\'))]
+                       '"{}"'.format(link_name.replace('/', '\\')),
+                       '"{}"'.format(source.replace('/', '\\'))]
 
                 self.run(*cmd, shell=True)
 
