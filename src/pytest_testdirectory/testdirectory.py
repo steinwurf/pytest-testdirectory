@@ -253,13 +253,13 @@ class TestDirectory(object):
     def run(self, args, **kwargs):
         """Runs the command in the test directory.
 
-        :param args: List of arguments
+        :param args: String or list of arguments
         :param kwargs: Keyword arguments passed to Popen(...)
 
         :return: A RunResult object representing the result of the command
         """
 
-        if isinstance(cmd, str):
+        if isinstance(args, str):
             kwargs['shell'] = True
 
         if 'env' not in kwargs:

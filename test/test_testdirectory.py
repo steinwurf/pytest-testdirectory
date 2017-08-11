@@ -2,10 +2,13 @@ import os
 
 def test_run(testdirectory):
 
-    testdirectory.run('python','--version')
+    testdirectory.run(['python','--version'])
 
-    testdirectory.run('python','--version', stdout=None, stderr=None)
+    testdirectory.run(['python','--version'], stdout=None, stderr=None)
 
+    r = testdirectory.run('python --version')
+    assert r.returncode == 0
+    assert r.stdout.match('Python *') or r.stderr.match('Python *')
 
 def test_testdirectory(testdirectory):
     """ Unit test for the testdirectory fixture"""
@@ -34,11 +37,6 @@ def test_testdirectory(testdirectory):
     assert os.path.exists(os.path.join(sub2.path(), 'sub1'))
     assert os.path.exists(sub1_copy.path())
 
-    # Run a command that should be available on all platforms
-    r = sub1.run('python', '--version')
-
-    assert r.returncode == 0
-    assert r.stdout.match('Python *') or r.stderr.match('Python *')
 
     sub3 = testdirectory.mkdir('sub3')
     ok3_file = sub3.copy_file(ok_path, rename_as='ok3.txt')
