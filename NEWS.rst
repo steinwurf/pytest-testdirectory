@@ -6,7 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Minor: Adding support for symlink to files.
+* Major: Changed the way the run(...) method of the testdirectory works.
+  It no longer implicitly takes a list of arguments, but rather either
+  a list or string.
 
 2.1.0
 -----

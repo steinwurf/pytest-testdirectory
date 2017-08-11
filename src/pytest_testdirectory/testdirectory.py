@@ -4,6 +4,7 @@ import glob
 import subprocess
 import time
 import os
+import sys
 
 from . import runresult
 from . import runresulterror
@@ -109,16 +110,7 @@ class TestDirectory(object):
         :return: The path to the file in its new location as a string.
         """
 
-        # Expand filename by expanding wildcards e.g. 'dir/*/file.txt', the
-        # glob should return only one file
-        files = glob.glob(filename)
-
-        print(filename)
-        print(files)
-
-        assert len(files) == 1
-
-        filename = files[0]
+        filename = self._expand_filename(filename=filename)
 
         # Copy the file to the tmpdir
         filepath = py.path.local(filename)
@@ -134,6 +126,30 @@ class TestDirectory(object):
             filepath = target
 
         return str(filepath)
+
+    def symlink_file(self, filename, rename_as=""):
+        """ Create a symlink to the file in the test directory.
+
+        :param filename: The filename as a string.
+        :param rename_as: If specified rename the file represented by filename
+            to the name given in rename_as as a string.
+        :return: The path to the file in its new location as a string.
+        """
+
+        filename = self._expand_filename(filename=filename)
+
+        filepath = py.path.local(filename)
+
+        link_name = self.tmpdir.join(filepath.basename)
+        if rename_as:
+            link_name = self.tmpdir.join(rename_as)
+
+        #link_name.mksymlinkto(filepath)
+        self._create_symlink(str(filepath), str(link_name))
+
+        print("Symlink: {} -> {}".format(filepath, link_name))
+
+        return str(link_name)
 
     def copy_files(self, filename):
 
@@ -179,10 +195,12 @@ class TestDirectory(object):
     def write_text(self, filename, data, encoding):
         """Writes a file in the temporary directory.
 
+        :return: The path to the file as a string
         """
 
         f = self.tmpdir.join(filename)
         f.write_text(data=data, encoding=encoding)
+        return str(f)
 
     def write_binary(self, filename, data):
         """Writes a file in the temporary directory.
@@ -232,14 +250,17 @@ class TestDirectory(object):
 
         return True
 
-    def run(self, *args, **kwargs):
+    def run(self, args, **kwargs):
         """Runs the command in the test directory.
 
-        :param args: List of arguments
+        :param args: String or list of arguments
         :param kwargs: Keyword arguments passed to Popen(...)
 
         :return: A RunResult object representing the result of the command
         """
+
+        if isinstance(args, str):
+            kwargs['shell'] = True
 
         if 'env' not in kwargs:
             # If 'env' is not passed as keyword argument use a copy of the
@@ -286,3 +307,40 @@ class TestDirectory(object):
             raise runresulterror.RunResultError(result)
 
         return result
+
+    def _create_symlink(self, source, link_name):
+        """ Create a symbolic link pointing to source named link_name. """
+
+        # os.symlink() is not available in Python 2.7 on Windows.
+        # We use the original function if it is available, otherwise we
+        # create a helper function for Windows
+        os_symlink = getattr(os, "symlink", None)
+        if not callable(os_symlink) and sys.platform == 'win32':
+
+            def symlink_windows(source, link_name):
+                # mklink is used to create an NTFS junction, i.e. symlink
+                cmd = ['mklink',
+                       '"{}"'.format(link_name.replace('/', '\\')),
+                       '"{}"'.format(source.replace('/', '\\'))]
+
+                self.run(' '.join(cmd), shell=True)
+
+            os_symlink = symlink_windows
+
+        os_symlink(source, link_name)
+
+    def _expand_filename(self, filename):
+        """ Expand filename by expanding wildcards e.g. 'dir/*/file.txt'.
+
+        The glob should return only one file
+        """
+        files = glob.glob(filename)
+
+        print(filename)
+        print(files)
+
+        assert len(files) == 1
+
+        filename = files[0]
+
+        return filename
