@@ -65,3 +65,22 @@ def test_testdirectory(testdirectory):
     sub5.rmdir()
 
     assert not testdirectory.contains_dir(os.path.join('sub4', 'sub5'))
+
+def test_write_text(testdirectory):
+    ok_path = testdirectory.write_text('ok.txt', u'hello_world',
+                                       encoding='utf-8')
+
+    assert testdirectory.contains_file('ok.txt')
+    assert os.path.isfile(ok_path)
+
+def test_symlink(testdirectory):
+    sub1 = testdirectory.mkdir('sub1')
+    sub2 = testdirectory.mkdir('sub2')
+
+    ok_path = sub1.write_text('ok.txt', u'hello_world', encoding='utf-8')
+
+    # Create a symlink to 'ok.txt' inside sub2
+    sub2.symlink_file(ok_path)
+
+    assert sub2.contains_file('ok.txt')
+    assert os.path.isfile(ok_path)
