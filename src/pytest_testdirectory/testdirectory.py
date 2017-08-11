@@ -143,7 +143,8 @@ class TestDirectory(object):
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
-        link_name.mksymlinkto(filepath)
+        #link_name.mksymlinkto(filepath)
+        self._create_symlink(str(filepath), str(link_name))
 
         print("Symlink: {} -> {}".format(filepath, link_name))
 
@@ -302,6 +303,25 @@ class TestDirectory(object):
             raise runresulterror.RunResultError(result)
 
         return result
+
+    def _create_symlink(self, source, link_name):
+        """ Create a symbolic link pointing to source named link_name. """
+
+        # os.symlink() is not available in Python 2.7 on Windows.
+        # We use the original function if it is available, otherwise we
+        # create a helper function for Windows
+        os_symlink = getattr(os, "symlink", None)
+        if not callable(os_symlink) and sys.platform == 'win32':
+
+            def symlink_windows(target, link_path):
+                # mklink is used to create an NTFS junction, i.e. symlink
+                cmd = 'mklink /J "{}" "{}"'.format(
+                    link_path.replace('/', '\\'), target.replace('/', '\\'))
+                self.run(cmd, shell=True)
+
+            os_symlink = symlink_windows
+
+        os_symlink(source, link_name)
 
     def _expand_filename(self, filename):
         """ Expand filename by expanding wildcards e.g. 'dir/*/file.txt'.
