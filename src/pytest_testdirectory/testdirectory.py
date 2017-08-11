@@ -319,7 +319,8 @@ class TestDirectory(object):
                 cmd = ['mklink', '/J',
                        '"{}"'.format(link_path.replace('/', '\\')),
                        '"{}"'.format(target.replace('/', '\\'))]
-                self.run(cmd, shell=True)
+
+                self.run(*cmd, shell=True)
 
             os_symlink = symlink_windows
 
