@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Minor: Adding support for symlink to files.
 
 2.1.0
 -----
