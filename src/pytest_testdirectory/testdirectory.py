@@ -320,7 +320,7 @@ class TestDirectory(object):
                        '"{}"'.format(link_name.replace('/', '\\')),
                        '"{}"'.format(source.replace('/', '\\'))]
 
-                self.run(*cmd, shell=True)
+                self.run(' '.join(cmd), shell=True)
 
             os_symlink = symlink_windows
 
