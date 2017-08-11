@@ -4,6 +4,7 @@ import glob
 import subprocess
 import time
 import os
+import sys
 
 from . import runresult
 from . import runresulterror
