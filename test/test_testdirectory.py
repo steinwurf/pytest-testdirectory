@@ -80,7 +80,7 @@ def test_symlink(testdirectory):
     ok_path = sub1.write_text('ok.txt', u'hello_world', encoding='utf-8')
 
     # Create a symlink to 'ok.txt' inside sub2
-    sub2.symlink_file(ok_path)
+    link_path = sub2.symlink_file(ok_path)
 
     assert sub2.contains_file('ok.txt')
-    assert os.path.isfile(ok_path)
+    assert os.path.isfile(link_path)
