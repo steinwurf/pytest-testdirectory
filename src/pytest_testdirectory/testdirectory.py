@@ -319,7 +319,7 @@ class TestDirectory(object):
 
             def symlink_windows(source, link_name):
                 # mklink is used to create an NTFS junction, i.e. symlink
-                cmd = ['mklink', '/J',
+                cmd = ['mklink',
                        '"{}"'.format(link_name.replace('/', '\\')),
                        '"{}"'.format(source.replace('/', '\\'))]
 
