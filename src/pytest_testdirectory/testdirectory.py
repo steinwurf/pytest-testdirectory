@@ -130,7 +130,8 @@ class TestDirectory(object):
     def symlink_file(self, filename, rename_as="", relative=True):
         """ Create a symlink to the file in the test directory.
 
-        :param filename: The filename as a string.
+        :param filename: The filename as a string. This is the original
+            file we want to create a symlink to.
         :param rename_as: If specified rename the file represented by filename
             to the name given in rename_as as a string.
         :param relative: Make the symlink use a relative path to the file.
@@ -141,10 +142,8 @@ class TestDirectory(object):
 
         filepath = py.path.local(filename)
 
+        # @todo move this down
         link_name = self.tmpdir.join(filepath.basename)
-
-        print("filepath = {}".format(filepath.dirname))
-        print('self.tmpdir = {}'.format(self.tmpdir))
 
         if relative:
             filepath = os.path.relpath(
@@ -155,7 +154,39 @@ class TestDirectory(object):
 
         self._create_symlink(str(filepath), str(link_name))
 
-        print("Symlink: {} -> {}".format(filepath, link_name))
+        print("Symlink file: {} -> {}".format(filepath, link_name))
+
+        return str(link_name)
+
+    def symlink_dir(self, directory, rename_as="", relative=True):
+        """ Create a symlink to the file in the test directory.
+
+        :param filename: The filename as a string. This is the original
+            file we want to create a symlink to.
+        :param rename_as: If specified rename the file represented by filename
+            to the name given in rename_as as a string.
+        :param relative: Make the symlink use a relative path to the file.
+        :return: The path to the file in its new location as a string.
+        """
+
+        # Make sure directory is a string
+        directory = str(directory)
+        print("directory={}".format(directory))
+
+        directory = self._expand_filename(filename=directory)
+
+        if relative:
+            directory = os.path.relpath(
+                start=str(self.tmpdir), path=directory)
+
+        link_name = self.tmpdir.join(os.path.dirname(directory))
+
+        if rename_as:
+            link_name = self.tmpdir.join(rename_as)
+
+        print("Symlink dir: {} -> {}".format(directory, link_name))
+        self._create_symlink(directory, str(link_name))
+
 
         return str(link_name)
 
@@ -315,6 +346,12 @@ class TestDirectory(object):
             raise runresulterror.RunResultError(result)
 
         return result
+
+    def __str__(self):
+        """:return: String representation of the testdirectory which is
+            the path.
+        """
+        return str(self.tmpdir)
 
     def _create_symlink(self, source, link_name):
         """ Create a symbolic link pointing to source named link_name. """
