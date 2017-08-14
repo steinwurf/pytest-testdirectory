@@ -127,12 +127,13 @@ class TestDirectory(object):
 
         return str(filepath)
 
-    def symlink_file(self, filename, rename_as=""):
+    def symlink_file(self, filename, rename_as="", relative=True):
         """ Create a symlink to the file in the test directory.
 
         :param filename: The filename as a string.
         :param rename_as: If specified rename the file represented by filename
             to the name given in rename_as as a string.
+        :param relative: Make the symlink use a relative path to the file.
         :return: The path to the file in its new location as a string.
         """
 
@@ -141,10 +142,17 @@ class TestDirectory(object):
         filepath = py.path.local(filename)
 
         link_name = self.tmpdir.join(filepath.basename)
+
+        print("filepath = {}".format(filepath.dirname))
+        print('self.tmpdir = {}'.format(self.tmpdir))
+
+        if relative:
+            filepath = os.path.relpath(
+                start=str(self.tmpdir), path=str(filepath))
+
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
-        #link_name.mksymlinkto(filepath)
         self._create_symlink(str(filepath), str(link_name))
 
         print("Symlink: {} -> {}".format(filepath, link_name))
