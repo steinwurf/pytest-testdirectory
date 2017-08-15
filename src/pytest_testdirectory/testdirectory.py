@@ -152,7 +152,7 @@ class TestDirectory(object):
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
-        self._create_symlink(str(filepath), str(link_name))
+        self._create_symlink(str(filepath), str(link_name), isdir=False)
 
         print("Symlink file: {} -> {}".format(filepath, link_name))
 
@@ -186,7 +186,8 @@ class TestDirectory(object):
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
-        self._create_symlink(source=directory, link_name=str(link_name))
+        self._create_symlink(
+            source=directory, link_name=str(link_name), isdir=True)
 
         return str(link_name)
 
@@ -353,7 +354,7 @@ class TestDirectory(object):
         """
         return str(self.tmpdir)
 
-    def _create_symlink(self, source, link_name):
+    def _create_symlink(self, source, link_name, isdir):
         """ Create a symbolic link pointing to source named link_name. """
 
         # os.symlink() is not available in Python 2.7 on Windows.
@@ -365,7 +366,7 @@ class TestDirectory(object):
             def symlink_windows(source, link_name):
                 # mklink is used to create an NTFS junction, i.e. symlink
                 cmd = ['mklink']
-                if os.path.isdir(source):
+                if isdir:
                     cmd += ['/D']
                 cmd +=['"{}"'.format(link_name.replace('/', '\\')),
                        '"{}"'.format(source.replace('/', '\\'))]
