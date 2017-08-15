@@ -140,13 +140,13 @@ class TestDirectory(object):
 
         filename = self._expand_filename(filename=filename)
 
-        filepath = py.path.local(filename)
+        filepath = str(py.path.local(filename))
 
         if relative:
             filepath = os.path.relpath(
-                start=str(self.tmpdir), path=str(filepath))
+                start=str(self.tmpdir), path=filepath)
 
-        link_name = self.tmpdir.join(filepath.basename)
+        link_name = self.tmpdir.join(os.path.basename(filepath))
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
