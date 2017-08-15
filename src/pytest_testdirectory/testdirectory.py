@@ -177,27 +177,16 @@ class TestDirectory(object):
         # https://stackoverflow.com/a/3925147/1717320
         directory_name = os.path.basename(os.path.normpath(directory))
 
-        print("directory={}".format(directory))
-        print("os.path.dirname(directory)={}".format(os.path.dirname(directory)))
-        print("directory_name={}".format(directory_name))
-
         if relative:
             directory = os.path.relpath(
                 start=str(self.tmpdir), path=directory)
 
-        print("directory={}".format(directory))
-        print("os.path.dirname(directory)={}".format(os.path.dirname(directory)))
-
         link_name = self.tmpdir.join(directory_name)
-
-        print("link_name={}".format(link_name))
 
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
-        print("Symlink dir: {} -> {}".format(directory, link_name))
         self._create_symlink(source=directory, link_name=str(link_name))
-
 
         return str(link_name)
 
@@ -375,8 +364,10 @@ class TestDirectory(object):
 
             def symlink_windows(source, link_name):
                 # mklink is used to create an NTFS junction, i.e. symlink
-                cmd = ['mklink',
-                       '"{}"'.format(link_name.replace('/', '\\')),
+                cmd = ['mklink']
+                if os.path.isdir(source):
+                    cmd += ['/D']
+                cmd +=['"{}"'.format(link_name.replace('/', '\\')),
                        '"{}"'.format(source.replace('/', '\\'))]
 
                 self.run(' '.join(cmd), shell=True)
