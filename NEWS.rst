@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* Minor" Adding support for symlink to directories.
+* Minor: Adding support for symlink to directories.
 
 3.0.0
 -----
