@@ -339,7 +339,11 @@ class TestDirectory(object):
         if stderr is not None:
             stderr = checkoutput.CheckOutput(output=stderr)
 
-        result = runresult.RunResult(command=' '.join(args), path=self.path(),
+        command = args
+        if isinstance(command, list):
+            command = ' '.join(command)
+
+        result = runresult.RunResult(command=command, path=self.path(),
             stdout=stdout, stderr=stderr, returncode=popen.returncode,
             time=end_time - start_time)
 
