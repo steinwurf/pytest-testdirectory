@@ -127,27 +127,65 @@ class TestDirectory(object):
 
         return str(filepath)
 
-    def symlink_file(self, filename, rename_as=""):
+    def symlink_file(self, filename, rename_as="", relative=True):
         """ Create a symlink to the file in the test directory.
 
-        :param filename: The filename as a string.
+        :param filename: The filename as a string. This is the original
+            file we want to create a symlink to.
         :param rename_as: If specified rename the file represented by filename
             to the name given in rename_as as a string.
+        :param relative: Make the symlink use a relative path to the file.
         :return: The path to the file in its new location as a string.
         """
 
         filename = self._expand_filename(filename=filename)
 
-        filepath = py.path.local(filename)
+        filepath = str(py.path.local(filename))
 
-        link_name = self.tmpdir.join(filepath.basename)
+        if relative:
+            filepath = os.path.relpath(
+                start=str(self.tmpdir), path=filepath)
+
+        link_name = self.tmpdir.join(os.path.basename(filepath))
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
-        #link_name.mksymlinkto(filepath)
-        self._create_symlink(str(filepath), str(link_name))
+        self._create_symlink(str(filepath), str(link_name), isdir=False)
 
-        print("Symlink: {} -> {}".format(filepath, link_name))
+        print("Symlink file: {} -> {}".format(filepath, link_name))
+
+        return str(link_name)
+
+    def symlink_dir(self, directory, rename_as="", relative=True):
+        """ Create a symlink to the file in the test directory.
+
+        :param filename: The filename as a string. This is the original
+            file we want to create a symlink to.
+        :param rename_as: If specified rename the file represented by filename
+            to the name given in rename_as as a string.
+        :param relative: Make the symlink use a relative path to the file.
+        :return: The path to the file in its new location as a string.
+        """
+
+        # Make sure directory is a string
+        directory = str(directory)
+        directory = self._expand_filename(filename=directory)
+
+        # Get the name of the directory:
+        # https://stackoverflow.com/a/3925147/1717320
+        directory_name = os.path.basename(os.path.normpath(directory))
+
+        if relative:
+            directory = os.path.relpath(
+                start=str(self.tmpdir), path=directory)
+
+        link_name = self.tmpdir.join(directory_name)
+
+        if rename_as:
+            link_name = self.tmpdir.join(rename_as)
+
+        self._create_symlink(
+            source=directory, link_name=str(link_name), isdir=True)
 
         return str(link_name)
 
@@ -299,7 +337,11 @@ class TestDirectory(object):
         if stderr is not None:
             stderr = checkoutput.CheckOutput(output=stderr)
 
-        result = runresult.RunResult(command=' '.join(args), path=self.path(),
+        command = args
+        if isinstance(command, list):
+            command = ' '.join(command)
+
+        result = runresult.RunResult(command=command, path=self.path(),
             stdout=stdout, stderr=stderr, returncode=popen.returncode,
             time=end_time - start_time)
 
@@ -308,7 +350,13 @@ class TestDirectory(object):
 
         return result
 
-    def _create_symlink(self, source, link_name):
+    def __str__(self):
+        """:return: String representation of the testdirectory which is
+            the path.
+        """
+        return str(self.tmpdir)
+
+    def _create_symlink(self, source, link_name, isdir):
         """ Create a symbolic link pointing to source named link_name. """
 
         # os.symlink() is not available in Python 2.7 on Windows.
@@ -319,8 +367,10 @@ class TestDirectory(object):
 
             def symlink_windows(source, link_name):
                 # mklink is used to create an NTFS junction, i.e. symlink
-                cmd = ['mklink',
-                       '"{}"'.format(link_name.replace('/', '\\')),
+                cmd = ['mklink']
+                if isdir:
+                    cmd += ['/D']
+                cmd +=['"{}"'.format(link_name.replace('/', '\\')),
                        '"{}"'.format(source.replace('/', '\\'))]
 
                 self.run(' '.join(cmd), shell=True)

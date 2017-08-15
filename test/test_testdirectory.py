@@ -71,7 +71,7 @@ def test_write_text(testdirectory):
     assert testdirectory.contains_file('ok.txt')
     assert os.path.isfile(ok_path)
 
-def test_symlink(testdirectory):
+def test_symlink_file(testdirectory):
     sub1 = testdirectory.mkdir('sub1')
     sub2 = testdirectory.mkdir('sub2')
 
@@ -82,3 +82,13 @@ def test_symlink(testdirectory):
 
     assert sub2.contains_file('ok.txt')
     assert os.path.isfile(link_path)
+
+def test_symlink_dir(testdirectory):
+    sub1 = testdirectory.mkdir('sub1')
+    sub2 = testdirectory.mkdir('sub2')
+
+    # Create a symlink to 'ok.txt' inside sub2
+    link_path = sub2.symlink_dir(sub1)
+
+    assert sub2.contains_dir('sub1')
+    assert os.path.isdir(link_path)

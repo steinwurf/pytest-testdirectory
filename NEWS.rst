@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Minor: Adding support for symlink to directories.
 
 3.0.0
 -----
