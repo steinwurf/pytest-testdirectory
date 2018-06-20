@@ -16,18 +16,18 @@ with io.open(os.path.join(cwd, 'wscript'), encoding='utf-8') as fd:
 
     regex = re.compile(
     r"""
-    (                # Group and match
-        VERSION      #    Match 'VERSION'
-        \s*          #    Match zero or more spaces
-        =            #    Match and equal sign
-        \s*          #    Match zero or more spaces
-    )                # End group
+    (                   # Group and match
+        VERSION         #    Match 'VERSION'
+        \s*             #    Match zero or more spaces
+        =               #    Match and equal sign
+        \s*             #    Match zero or more spaces
+    )                   # End group
 
-    '
-    (                # Group and match
-         \d\.\d\.\d  #    Match digit.digit.digit e.g. 1.2.3
-    )                # End of group
-    '
+    '                   # Match '
+    (                   # Group and match
+         \d+\.\d+\.\d+  #    Match digit(s).digit(s).digit(s) e.g. 10.2.3
+    )                   # End of group
+    '                   # Match '
     """, re.VERBOSE)
 
     for line in fd:
