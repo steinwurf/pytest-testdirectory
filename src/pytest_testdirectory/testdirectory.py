@@ -24,8 +24,7 @@ class TestDirectory(object):
     The purpose of this module is to simplify this task.
 
     To make it easy to use in with pytest the TestDirectory object can be
-    injected into a test function by using the testdirectory fixture (defined
-    below this class).
+    injected into a test function by using the testdirectory fixture.
 
     Example:
 
