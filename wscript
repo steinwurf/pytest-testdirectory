@@ -63,7 +63,7 @@ def build(bld):
     venv = _create_virtualenv(cwd=bld.path.abspath(), ctx=bld)
 
     with venv:
-        venv.pip_install('wheel')
+        venv.pip_install(['wheel'])
         venv.run('python setup.py bdist_wheel --universal')
 
     # Delete the egg-info directory, do not understand why this is created
@@ -98,7 +98,7 @@ def upload(bld):
     venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
 
     with venv:
-        venv.pip_install('twine')
+        venv.pip_install(['twine'])
 
         wheel = _find_wheel(ctx=bld)
 
@@ -112,7 +112,7 @@ def _pytest(bld):
     venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
 
     with venv:
-        venv.pip_install('pytest')
+        venv.pip_install(['pytest'])
 
         # Install the pytest-testdirectory plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)
