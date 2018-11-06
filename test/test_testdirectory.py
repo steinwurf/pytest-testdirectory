@@ -1,14 +1,16 @@
 import os
 
+
 def test_run(testdirectory):
 
-    testdirectory.run(['python','--version'])
+    testdirectory.run(['python', '--version'])
 
-    testdirectory.run(['python','--version'], stdout=None, stderr=None)
+    testdirectory.run(['python', '--version'], stdout=None, stderr=None)
 
     r = testdirectory.run('python --version')
     assert r.returncode == 0
     assert r.stdout.match('Python *') or r.stderr.match('Python *')
+
 
 def test_testdirectory(testdirectory):
     """ Unit test for the testdirectory fixture"""
@@ -37,7 +39,6 @@ def test_testdirectory(testdirectory):
     assert os.path.exists(os.path.join(sub2.path(), 'sub1'))
     assert os.path.exists(sub1_copy.path())
 
-
     sub3 = testdirectory.mkdir('sub3')
     ok3_file = sub3.copy_file(ok_path, rename_as='ok3.txt')
 
@@ -64,12 +65,14 @@ def test_testdirectory(testdirectory):
 
     assert not testdirectory.contains_dir(os.path.join('sub4', 'sub5'))
 
+
 def test_write_text(testdirectory):
     ok_path = testdirectory.write_text('ok.txt', u'hello_world',
                                        encoding='utf-8')
 
     assert testdirectory.contains_file('ok.txt')
     assert os.path.isfile(ok_path)
+
 
 def test_symlink_file(testdirectory):
     sub1 = testdirectory.mkdir('sub1')
@@ -82,6 +85,7 @@ def test_symlink_file(testdirectory):
 
     assert sub2.contains_file('ok.txt')
     assert os.path.isfile(link_path)
+
 
 def test_symlink_dir(testdirectory):
     sub1 = testdirectory.mkdir('sub1')
