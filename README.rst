@@ -2,6 +2,10 @@
 Introduction
 ============
 
+
+.. image:: https://img.shields.io/travis-ci/steinwurf/pytest-testdirectory/master.svg?style=flat-square&logo=travis
+    :target: https://travis-ci.org/steinwurf/pytest-testdirectory
+
 .. image:: https://badge.fury.io/py/pytest-testdirectory.svg
     :target: https://badge.fury.io/py/pytest-testdirectory
 
