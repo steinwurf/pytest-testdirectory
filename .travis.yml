@@ -11,6 +11,6 @@ matrix:
           dist: xenial
 cache: pip
 install:
-  - python setup.py install
+  - ./waf configure
 script:
-  - python setup.py pytest
+  - ./waf build --run_tests
