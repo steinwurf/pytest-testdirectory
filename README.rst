@@ -21,7 +21,7 @@ directories.
    :local:
 
 Installation
-===========
+============
 
 To install pytest-testdirectory::
 
