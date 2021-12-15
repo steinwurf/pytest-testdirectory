@@ -1,5 +1,6 @@
 import fnmatch
 
+
 class CheckOutput:
     """Stores the output after running a command typically standard
     output or standard error.
@@ -11,14 +12,14 @@ class CheckOutput:
     """
 
     def __init__(self, output):
-        """ Creates a new CheckOutput object
+        """Creates a new CheckOutput object
 
         :param output: String representing the output
         """
         self.output = output.splitlines()
 
     def match(self, pattern):
-        """ Matches the lines in the output with the pattern. The match
+        """Matches the lines in the output with the pattern. The match
         pattern can contain basic wildcards, see
         https://docs.python.org/2/library/fnmatch.html
 
@@ -58,7 +59,7 @@ class CheckOutput:
 
         :return: A string representing the output.
         """
-        return '\n'.join(self.output)
+        return "\n".join(self.output)
 
     def __repr__(self):
         """
@@ -66,4 +67,4 @@ class CheckOutput:
 
         :return: A string representing the output.
         """
-        return 'CheckOutput: "{}"'.format('\n'.join(self.output))
+        return 'CheckOutput: "{}"'.format("\n".join(self.output))

@@ -3,11 +3,23 @@ Introduction
 ============
 
 
-.. image:: https://travis-ci.org/steinwurf/pytest-testdirectory.svg?branch=master
-    :target: https://travis-ci.org/steinwurf/pytest-testdirectory
 
-.. image:: https://badge.fury.io/py/pytest-testdirectory.svg
+|PyPi| |Waf Python Tests| |Black| |Flake8| |Pip Install|
+
+.. |PyPi| image:: https://badge.fury.io/py/pytest-testdirectory.svg
     :target: https://badge.fury.io/py/pytest-testdirectory
+
+.. |Waf Python Tests| image:: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/python-waf.yml/badge.svg
+   :target: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/python-waf.yml
+
+.. |Flake8| image:: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/flake.yml/badge.svg
+    :target: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/flake.yml
+
+.. |Black| image:: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/black.yml/badge.svg
+      :target: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/black.yml
+
+.. |Pip Install| image:: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/pip.yml/badge.svg
+      :target: https://github.com/steinwurf/pytest-testdirectory/actions/workflows/pip.yml
 
 Testing code by invoking executable which potentially creates and deletes
 files and directories can be hard and error prone.

@@ -10,12 +10,14 @@ from . import runresult
 from . import runresulterror
 from . import checkoutput
 
+
 @pytest.fixture
 def testdirectory(tmpdir):
-    """ Creates the py.test fixture to make it usable withing the unit tests.
+    """Creates the py.test fixture to make it usable withing the unit tests.
     See the TestDirectory class for more information.
     """
     return TestDirectory(tmpdir)
+
 
 class TestDirectory(object):
     """Testing code by invoking executable which potentially creates and deletes
@@ -49,6 +51,7 @@ class TestDirectory(object):
      - pytest internal plugin for doing the same thing:
            https://github.com/pytest-dev/pytest/blob/master/_pytest/capture.py
     """
+
     def __init__(self, tmpdir):
 
         if isinstance(tmpdir, py.path.local):
@@ -73,7 +76,7 @@ class TestDirectory(object):
         return TestDirectory(self.tmpdir.mkdir(directory))
 
     def rmdir(self):
-        """ Remove the directory."""
+        """Remove the directory."""
         self.tmpdir.remove()
 
         # @todo not sure if this is a good idea, but I guess the tmpdir is
@@ -81,27 +84,25 @@ class TestDirectory(object):
         self.tmpdir = None
 
     def join(self, *args):
-        """ Get a TestDirectory instance representing a path.
-
-        """
+        """Get a TestDirectory instance representing a path."""
         path = self.tmpdir.join(*args)
         assert path.isdir()
 
         return TestDirectory(tmpdir=path)
 
     def rmfile(self, filename):
-        """ Remove a file.
+        """Remove a file.
 
         :param filename The name of the file to remove as a string
         """
         os.remove(os.path.join(self.path(), filename))
 
     def path(self):
-        """ :return: The path to the temporary directory as a string"""
+        """:return: The path to the temporary directory as a string"""
         return str(self.tmpdir)
 
     def copy_file(self, filename, rename_as=""):
-        """ Copy the file to the test directory.
+        """Copy the file to the test directory.
 
         :param filename: The filename as a string.
         :param rename_as: If specified rename the file represented by filename
@@ -127,7 +128,7 @@ class TestDirectory(object):
         return str(filepath)
 
     def symlink_file(self, filename, rename_as="", relative=True):
-        """ Create a symlink to the file in the test directory.
+        """Create a symlink to the file in the test directory.
 
         :param filename: The filename as a string. This is the original
             file we want to create a symlink to.
@@ -142,8 +143,7 @@ class TestDirectory(object):
         filepath = str(py.path.local(filename))
 
         if relative:
-            filepath = os.path.relpath(
-                start=str(self.tmpdir), path=filepath)
+            filepath = os.path.relpath(start=str(self.tmpdir), path=filepath)
 
         link_name = self.tmpdir.join(os.path.basename(filepath))
         if rename_as:
@@ -156,7 +156,7 @@ class TestDirectory(object):
         return str(link_name)
 
     def symlink_dir(self, directory, rename_as="", relative=True):
-        """ Create a symlink to the file in the test directory.
+        """Create a symlink to the file in the test directory.
 
         :param filename: The filename as a string. This is the original
             file we want to create a symlink to.
@@ -175,16 +175,14 @@ class TestDirectory(object):
         directory_name = os.path.basename(os.path.normpath(directory))
 
         if relative:
-            directory = os.path.relpath(
-                start=str(self.tmpdir), path=directory)
+            directory = os.path.relpath(start=str(self.tmpdir), path=directory)
 
         link_name = self.tmpdir.join(directory_name)
 
         if rename_as:
             link_name = self.tmpdir.join(rename_as)
 
-        self._create_symlink(
-            source=directory, link_name=str(link_name), isdir=True)
+        self._create_symlink(source=directory, link_name=str(link_name), isdir=True)
 
         return str(link_name)
 
@@ -240,9 +238,7 @@ class TestDirectory(object):
         return str(f)
 
     def write_binary(self, filename, data):
-        """Writes a file in the temporary directory.
-
-        """
+        """Writes a file in the temporary directory."""
 
         f = self.tmpdir.join(filename)
 
@@ -251,7 +247,7 @@ class TestDirectory(object):
         f.write_binary(data=data)
 
     def contains_file(self, filename):
-        """ Checks for the existance of a file.
+        """Checks for the existance of a file.
 
         :param filename: The filename to check for.
         :return: True if the file is contained within the test directory.
@@ -261,14 +257,14 @@ class TestDirectory(object):
         if len(files) == 0:
             return False
 
-        assert(len(files) == 1)
+        assert len(files) == 1
 
         filename = files[0]
 
         return os.path.isfile(filename)
 
     def contains_dir(self, *directories):
-        """ Checks for the existance of a directory.
+        """Checks for the existance of a directory.
 
         :param dirname: The directory name to check for.
         :return: True if the directory is contained within the test directory.
@@ -297,31 +293,33 @@ class TestDirectory(object):
         """
 
         if isinstance(args, str):
-            kwargs['shell'] = True
+            kwargs["shell"] = True
 
-        if 'env' not in kwargs:
+        if "env" not in kwargs:
             # If 'env' is not passed as keyword argument use a copy of the
             # current environment.
-            kwargs['env'] = os.environ.copy()
+            kwargs["env"] = os.environ.copy()
 
-        if 'stdout' not in kwargs:
-            kwargs['stdout'] = subprocess.PIPE
+        if "stdout" not in kwargs:
+            kwargs["stdout"] = subprocess.PIPE
 
-        if 'stderr' not in kwargs:
-            kwargs['stderr'] = subprocess.PIPE
+        if "stderr" not in kwargs:
+            kwargs["stderr"] = subprocess.PIPE
 
-        if 'cwd' not in kwargs:
+        if "cwd" not in kwargs:
             # Sets the current working directory to the path of
             # the tmpdir
-            kwargs['cwd'] = str(self.tmpdir)
+            kwargs["cwd"] = str(self.tmpdir)
 
         start_time = time.time()
 
-        popen = subprocess.Popen(args,
+        popen = subprocess.Popen(
+            args,
             # Need to decode the stdout and stderr with the correct
             # character encoding (http://stackoverflow.com/a/28996987)
             universal_newlines=True,
-            **kwargs)
+            **kwargs
+        )
 
         stdout, stderr = popen.communicate()
 
@@ -338,11 +336,16 @@ class TestDirectory(object):
 
         command = args
         if isinstance(command, list):
-            command = ' '.join(command)
+            command = " ".join(command)
 
-        result = runresult.RunResult(command=command, path=self.path(),
-            stdout=stdout, stderr=stderr, returncode=popen.returncode,
-            time=end_time - start_time)
+        result = runresult.RunResult(
+            command=command,
+            path=self.path(),
+            stdout=stdout,
+            stderr=stderr,
+            returncode=popen.returncode,
+            time=end_time - start_time,
+        )
 
         if popen.returncode != 0:
             raise runresulterror.RunResultError(result)
@@ -351,35 +354,37 @@ class TestDirectory(object):
 
     def __str__(self):
         """:return: String representation of the testdirectory which is
-            the path.
+        the path.
         """
         return str(self.tmpdir)
 
     def _create_symlink(self, source, link_name, isdir):
-        """ Create a symbolic link pointing to source named link_name. """
+        """Create a symbolic link pointing to source named link_name."""
 
         # os.symlink() is not available in Python 2.7 on Windows.
         # We use the original function if it is available, otherwise we
         # create a helper function for Windows
         os_symlink = getattr(os, "symlink", None)
-        if not callable(os_symlink) and sys.platform == 'win32':
+        if not callable(os_symlink) and sys.platform == "win32":
 
             def symlink_windows(source, link_name):
                 # mklink is used to create an NTFS junction, i.e. symlink
-                cmd = ['mklink']
+                cmd = ["mklink"]
                 if isdir:
-                    cmd += ['/D']
-                cmd +=['"{}"'.format(link_name.replace('/', '\\')),
-                       '"{}"'.format(source.replace('/', '\\'))]
+                    cmd += ["/D"]
+                cmd += [
+                    '"{}"'.format(link_name.replace("/", "\\")),
+                    '"{}"'.format(source.replace("/", "\\")),
+                ]
 
-                self.run(' '.join(cmd), shell=True)
+                self.run(" ".join(cmd), shell=True)
 
             os_symlink = symlink_windows
 
         os_symlink(source, link_name)
 
     def _expand_filename(self, filename):
-        """ Expand filename by expanding wildcards e.g. 'dir/*/file.txt'.
+        """Expand filename by expanding wildcards e.g. 'dir/*/file.txt'.
 
         The glob should return only one file
         """
