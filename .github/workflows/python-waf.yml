@@ -10,13 +10,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [Windows, Linux, macOS]
+        os: [Windows, Linux]
         include:
           - os: Windows
             PYTHON: python
           - os: Linux
-            PYTHON: python3
-          - os: macOS
             PYTHON: python3
     runs-on: [self-hosted, "${{ matrix.os }}"]
     name: ${{ matrix.os }} Waf
