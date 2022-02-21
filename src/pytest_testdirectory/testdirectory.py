@@ -292,8 +292,15 @@ class TestDirectory(object):
         :return: A RunResult object representing the result of the command
         """
 
-        if isinstance(args, str):
+        if "shell" not in kwargs:
             kwargs["shell"] = True
+
+            # The rules for how subprocess handles arguments is a bit complex we
+            # typically would like to have environment variable expansion etc.
+            # so we would run commands via the shell - this seems to imply that
+            # the command should be passed as a string.
+            if isinstance(args, list):
+                args = " ".join(args)
 
         if "env" not in kwargs:
             # If 'env' is not passed as keyword argument use a copy of the
