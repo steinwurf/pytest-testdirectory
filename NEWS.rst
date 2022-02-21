@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+4.0.0
+-----
 * Major: Default shell=True unless specified by the user in the run(..) command
 
 3.1.0
