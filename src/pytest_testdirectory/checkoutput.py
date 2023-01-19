@@ -23,7 +23,7 @@ class CheckOutput:
         pattern can contain basic wildcards, see
         https://docs.python.org/2/library/fnmatch.html
 
-        For convenience:
+        For convenience::
 
             +-----------------------------------------+
             |Pattern|Meaning                          |

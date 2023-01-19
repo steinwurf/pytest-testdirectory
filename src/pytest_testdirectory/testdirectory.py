@@ -40,6 +40,7 @@ class TestDirectory(object):
             # we just executed
             assert r.returncode == 0
 
+
     The testdirectory is an instance of TestDirectory and represents an actual
     temporary directory somewhere on the machine running the test code. Using
     the API we can create additional temporary directories, populate them with
@@ -50,10 +51,14 @@ class TestDirectory(object):
      - http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
      - pytest internal plugin for doing the same thing:
            https://github.com/pytest-dev/pytest/blob/master/_pytest/capture.py
+
     """
 
     def __init__(self, tmpdir):
+        """Create a new TestDirectory instance.
 
+        :param tmpdir: The temporary directory as a py.path.local instance or str.
+        """
         if isinstance(tmpdir, py.path.local):
             self.tmpdir = tmpdir
         else:
@@ -247,7 +252,7 @@ class TestDirectory(object):
         f.write_binary(data=data)
 
     def contains_file(self, filename):
-        """Checks for the existance of a file.
+        """Checks for the existence of a file.
 
         :param filename: The filename to check for.
         :return: True if the file is contained within the test directory.
@@ -264,7 +269,7 @@ class TestDirectory(object):
         return os.path.isfile(filename)
 
     def contains_dir(self, *directories):
-        """Checks for the existance of a directory.
+        """Checks for the existence of a directory.
 
         :param dirname: The directory name to check for.
         :return: True if the directory is contained within the test directory.
@@ -360,8 +365,10 @@ class TestDirectory(object):
         return result
 
     def __str__(self):
-        """:return: String representation of the testdirectory which is
-        the path.
+        """Generate a single string representation of the testdirectory.
+
+        :return: String representation of the testdirectory which is
+            the path.
         """
         return str(self.tmpdir)
 
