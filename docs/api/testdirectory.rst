@@ -1,5 +1,5 @@
 ``TestDirectory``
 --------------------------
 
-.. autoclass:: testdirectory.TestDirectory
+.. autoclass:: pytest_testdirectory.testdirectory.TestDirectory
 
