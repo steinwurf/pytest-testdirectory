@@ -2,6 +2,7 @@
     "sphinx": [
         {
             "scripts": [
+                "python3 -m pip install ${source_path}",
                 "sphinx-build -b html -D version=${release} -W . ${build_path}/${release}"
             ],
             "requirements": "${source_path}/docs/requirements.txt",

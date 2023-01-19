@@ -9,7 +9,7 @@ virtual network interfaces and to connect them to each other. This allows
 you to test your network applications without the need to have a real
 network connection.
 
-The :ref:`dummynetDummyNet` class is a Python wrapper for the Linux ``ip netns``
+The class is a Python wrapper for the Linux ``ip netns``
 and ``ip link`` tools.
 
 So far, Ubuntu and Debian are supported, but please make sure, that you
@@ -30,6 +30,3 @@ To get started, please read the :ref:`quick start` section.
    quick_start
    api/api
    developers
-
-
-

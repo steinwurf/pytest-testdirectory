@@ -28,7 +28,7 @@ class TestDirectory(object):
     To make it easy to use in with pytest the TestDirectory object can be
     injected into a test function by using the testdirectory fixture.
 
-    Example:
+    Example::
 
         def test_this_function(testdirectory):
             images = testdirectory.mkdir('images')
@@ -391,7 +391,7 @@ class TestDirectory(object):
         os_symlink(source, link_name)
 
     def _expand_filename(self, filename):
-        """Expand filename by expanding wildcards e.g. 'dir/*/file.txt'.
+        r"""Expand filename by expanding wildcards e.g. ``'dir/*/file.txt'``.
 
         The glob should return only one file
         """

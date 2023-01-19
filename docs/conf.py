@@ -16,8 +16,6 @@ author = "Steinwurf ApS"
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../src/pytest_testdirectory"))
-
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosectionlabel",

@@ -1,4 +1,4 @@
 RunResultError``
 --------------------------
 
-.. autoclass:: runresulterror.RunResultError
+.. autoclass:: pytest_testdirectory.runresulterror.RunResultError

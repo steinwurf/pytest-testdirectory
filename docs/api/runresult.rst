@@ -1,4 +1,4 @@
 ``RunResult``
 ----------------------
 
-.. autoclass:: runresult.RunResult
+.. autoclass:: pytest_testdirectory.runresult.RunResult
