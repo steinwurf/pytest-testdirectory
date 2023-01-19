@@ -5,74 +5,61 @@ The following section will help you get started.
 
 The fastest way to get started is to ``pip install`` the package::
 
-    python3 -m pip install dummynet
+    python3 -m pip install pytest-testdirectory
 
 After this you are ready to go::
 
-   import logging
-   import dummynet
+    import pytest
 
-   log = logging.getLogger("dummynet")
-   log.setLevel(logging.DEBUG)
+    def test_testdirectory(testdirectory):
+        """Unit test for the testdirectory fixture"""
+        assert os.path.exists(testdirectory.path())
 
-   process_monitor = dummynet.ProcessMonitor(log=log)
+        sub1 = testdirectory.mkdir("sub1")
+        assert os.path.exists(sub1.path())
 
-   shell = dummynet.HostShell(log=log, sudo=sudo, process_monitor=process_monitor)
+        sub1.write_binary("ok.txt", b"hello_world")
 
-   net = dummynet.DummyNet(shell=shell)
+        ok_path = os.path.join(sub1.path(), "ok.txt")
 
-   try:
+        assert os.path.isfile(ok_path)
+        sub1.rmfile("ok.txt")
+        assert not os.path.isfile(ok_path)
 
-      # Get a list of the current namespaces
-      namespaces = net.netns_list()
-      assert namespaces == []
+        sub1.write_text("ok2.txt", u"hello_world2", encoding="utf-8")
 
-      # create two namespaces
-      demo0 = net.netns_add(name="demo0")
-      demo1 = net.netns_add(name="demo1")
+        ok_path = os.path.join(sub1.path(), "ok2.txt")
 
-      net.link_veth_add(p1_name="demo0-eth0", p2_name="demo1-eth0")
+        assert os.path.isfile(ok_path)
 
-      # Move the interfaces to the namespaces
-      net.link_set(namespace="demo0", interface="demo0-eth0")
-      net.link_set(namespace="demo1", interface="demo1-eth0")
+        sub2 = testdirectory.mkdir("sub2")
+        sub1_copy = sub2.copy_dir(sub1.path())
 
-      # Bind an IP-address to the two peers in the link.
-      demo0.addr_add(ip="10.0.0.1/24", interface="demo0-eth0")
-      demo1.addr_add(ip="10.0.0.2/24", interface="demo1-eth0")
+        assert os.path.exists(os.path.join(sub2.path(), "sub1"))
+        assert os.path.exists(sub1_copy.path())
 
-      # Activate the interfaces.
-      demo0.up(interface="demo0-eth0")
-      demo1.up(interface="demo1-eth0")
-      demo0.up(interface="lo")
-      demo1.up(interface="lo")
+        sub3 = testdirectory.mkdir("sub3")
+        ok3_file = sub3.copy_file(ok_path, rename_as="ok3.txt")
 
-      # Test will run until last non-daemon process is done.
-      proc0 = demo0.run_async(cmd="ping -c 20 10.0.0.2", daemon=True)
-      proc1 = demo1.run_async(cmd="ping -c 10 10.0.0.1")
+        assert testdirectory.contains_dir("sub3")
+        assert not testdirectory.contains_dir("notheredir")
 
-      # Print output as we go (optional)
-      def _proc0_stdout(data):
-         print("proc0: {}".format(data))
+        assert os.path.isfile(ok3_file)
+        assert sub3.contains_file("ok3.txt")
+        assert not sub3.contains_file("noherefile.txt")
 
-      def _proc1_stdout(data):
-         print("proc1: {}".format(data))
+        sub3.rmdir()
+        assert not testdirectory.contains_dir("sub3")
 
-      proc0.stdout_callback = _proc0_stdout
-      proc1.stdout_callback = _proc1_stdout
+        sub4 = testdirectory.mkdir("sub4")
+        sub4.mkdir("sub5")
 
-      while process_monitor.run():
-         pass
+        # Will look for 'sub4/sub5'
+        assert testdirectory.contains_dir(os.path.join("sub4", "sub5"))
+        assert testdirectory.contains_dir(os.path.join("sub*", "sub5"))
+        assert testdirectory.contains_dir(os.path.join("sub*", "s*5"))
 
-      # Check that the ping succeeded.
-      proc1.match(stdout="10 packets transmitted*", stderr=None)
+        sub5 = sub4.join("sub5")
+        sub5.rmdir()
 
-      # Since proc0 is a daemon we automatically kill it when the last
-      # non-daemon process is done. However we can still see the output it
-      # generated.
-      print(f"proc0: {proc0.stdout}")
-
-   finally:
-
-      # Clean up.
-      net.cleanup()
+        assert not testdirectory.contains_dir(os.path.join("sub4", "sub5"))
