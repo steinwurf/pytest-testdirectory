@@ -75,6 +75,22 @@ def upload(bld):
         venv.run(f"python -m twine upload {wheel}")
 
 
+def docs(ctx):
+    """Build the documentation"""
+
+    ctx.pip_compile(
+        requirements_in="docs/requirements.in", requirements_txt="docs/requirements.txt"
+    )
+
+    with ctx.create_virtualenv() as venv:
+        venv.run("python -m pip install -r docs/requirements.txt")
+
+        build_path = os.path.join(ctx.path.abspath(), "build", "docs")
+
+        venv.run("giit clean . --build_path {}".format(build_path))
+        venv.run("giit sphinx . --build_path {}".format(build_path))
+
+
 def _pytest(bld, venv):
 
     # To update the requirements.txt just delete it - a fresh one
