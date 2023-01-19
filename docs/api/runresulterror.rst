@@ -1,0 +1,4 @@
+RunResultError``
+--------------------------
+
+.. autoclass:: runresulterror.RunResultError

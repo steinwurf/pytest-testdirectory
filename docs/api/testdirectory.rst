@@ -1,0 +1,5 @@
+``TestDirectory``
+--------------------------
+
+.. autoclass:: testdirectory.TestDirectory
+

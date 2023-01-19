@@ -1,0 +1,4 @@
+``RunResult``
+----------------------
+
+.. autoclass:: runresult.RunResult

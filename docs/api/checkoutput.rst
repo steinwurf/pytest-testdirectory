@@ -1,0 +1,4 @@
+``CheckOutput``
+-------------------------------------
+
+.. autoclass:: checkoutput.CheckOutput
