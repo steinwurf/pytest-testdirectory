@@ -5,6 +5,8 @@ import subprocess
 import time
 import os
 import sys
+import pathlib
+import shutil
 
 from . import runresult
 from . import runresulterror
@@ -98,39 +100,31 @@ class TestDirectory(object):
     def rmfile(self, filename):
         """Remove a file.
 
-        :param filename The name of the file to remove as a string
+        :param filename: The name of the file to remove as a pathlib.Path or string.
         """
-        os.remove(os.path.join(self.path(), filename))
+        file_path = pathlib.Path(str(self.tmpdir)) / pathlib.Path(filename)
+
+        if file_path.is_file():
+            file_path.unlink()
+        else:
+            raise FileNotFoundError(f"{filename} does not exist or is not a file.")
 
     def path(self):
         """:return: The path to the temporary directory as a string"""
         return str(self.tmpdir)
 
     def copy_file(self, filename, rename_as=""):
-        """Copy the file to the test directory.
+        """Copy the file to the test directory. Preserve file flags.
 
-        :param filename: The filename as a string.
+        :param filename: The filename as a string or pathlib.Path object.
         :param rename_as: If specified rename the file represented by filename
             to the name given in rename_as as a string.
-        :return: The path to the file in its new location as a string.
+        :return: The path to the file in its new location as a pathlib.Path object.
         """
-
-        filename = self._expand_filename(filename=filename)
-
-        # Copy the file to the tmpdir
-        filepath = py.path.local(filename)
-        filepath.copy(self.tmpdir)
-
-        print("Copy: {} -> {}".format(filepath, self.tmpdir))
-
-        filepath = self.tmpdir.join(filepath.basename)
-        if rename_as:
-            target = self.tmpdir.join(rename_as)
-            filepath.rename(target)
-            print("Rename: {} -> {}".format(filepath, target))
-            filepath = target
-
-        return str(filepath)
+        file_path = pathlib.Path(filename)
+        new_path = pathlib.Path(str(self.tmpdir)) / (rename_as if rename_as else file_path.name)
+        shutil.copy2(str(file_path), str(new_path))
+        return new_path
 
     def symlink_file(self, filename, rename_as="", relative=True):
         """Create a symlink to the file in the test directory.
