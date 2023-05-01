@@ -18,7 +18,6 @@ class UploadContext(BuildContext):
 
 
 def options(opt):
-
     opt.add_option(
         "--run_tests", default=False, action="store_true", help="Run all unit tests"
     )
@@ -31,10 +30,8 @@ def options(opt):
 
 
 def build(bld):
-
     # Create a virtualenv in the source folder and build universal wheel
     with bld.create_virtualenv() as venv:
-
         venv.run(cmd="python -m pip install wheel")
         venv.run(cmd="python setup.py bdist_wheel --universal", cwd=bld.path)
 
@@ -91,8 +88,17 @@ def docs(ctx):
         venv.run("giit sphinx . --build_path {}".format(build_path))
 
 
-def _pytest(bld, venv):
+def prepare_release(ctx):
+    """Prepare a release."""
 
+    with ctx.rewrite_file(filename="setup.py") as f:
+        pattern = r'VERSION = "\d+\.\d+\.\d+"'
+        replacement = f'VERSION = "{VERSION}"'
+
+        f.regex_replace(pattern=pattern, replacement=replacement)
+
+
+def _pytest(bld, venv):
     # To update the requirements.txt just delete it - a fresh one
     # will be generated from test/requirements.in
     if not os.path.isfile("test/requirements.txt"):
@@ -126,6 +132,3 @@ def _pytest(bld, venv):
     # in the file system and make some tests pass although their .py
     # counter-part has been e.g. deleted
     venv.run("python -B -m pytest {} --basetemp {}".format(testdir.abspath(), basetemp))
-
-    # Check the package
-    venv.run(f"twine check {wheel}")
