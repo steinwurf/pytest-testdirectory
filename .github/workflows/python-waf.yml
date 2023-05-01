@@ -7,25 +7,20 @@ on:
   pull_request:
 jobs:
   waf:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [Windows, Linux]
-        include:
-          - os: Windows
-            PYTHON: python
-          - os: Linux
-            PYTHON: python3
-    runs-on: [self-hosted, "${{ matrix.os }}"]
-    name: ${{ matrix.os }} Waf
-    env:
-      python: python3
+    name: Waf
+    runs-on: [self-hosted, Linux, builder, docker, Windows]
+    container:
+      image: python:3.9.5
+      # We run the container with root privileges such that we can create and modify network namespaces.
+      options: --user 0:0 --privileged
+      volumes:
+        - /home/buildbot/.ssh:/root/.ssh
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure
-        run: ${{ matrix.PYTHON }} waf configure
+        run: python3 waf configure
       - name: Build
-        run: ${{ matrix.PYTHON }} waf
+        run: python3 waf
       - name: Test
-        run: ${{ matrix.PYTHON }} waf --run_tests
+        run: python3 waf --run_tests
