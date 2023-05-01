@@ -18,10 +18,10 @@ def testdirectory(tmpdir):
     """Creates the py.test fixture to make it usable withing the unit tests.
     See the TestDirectory class for more information.
     """
-    return TestDirectory(tmpdir)
+    return TestDirectory(tmpdir=pathlib.Path(str(tmpdir)))
 
 
-class TestDirectory(object):
+class TestDirectory:
     """Testing code by invoking executable which potentially creates and deletes
     files and directories can be hard and error prone.
 
@@ -61,48 +61,59 @@ class TestDirectory(object):
 
         :param tmpdir: The temporary directory as a py.path.local instance or str.
         """
-        if isinstance(tmpdir, py.path.local):
-            self.tmpdir = tmpdir
-        else:
-            self.tmpdir = py.path.local(path=tmpdir)
+        self.tmpdir = tmpdir
 
     @staticmethod
     def from_path(path):
         """Create a new TestDirectory instance from a path.
 
-        :param path: The path as a string.
+        :param path: The path as a string or pathlib.Path object.
         """
-        assert os.path.isdir(path)
-        return TestDirectory(py.path.local(path))
+        path = pathlib.Path(path)
+
+        if not path.is_dir():
+            raise ValueError(f"{path} does not exist or is not a directory")
+
+        return TestDirectory(tmpdir=path)
 
     def mkdir(self, directory):
         """Create a sub-directory in the temporary / test dir.
 
-        :param directory: The
+        :param directory: The sub-directory to create as a string or pathlib.Path.
         """
-        return TestDirectory(self.tmpdir.mkdir(directory))
+        directory = pathlib.Path(directory)
+
+        child_directory = self.tmpdir / directory
+        child_directory.mkdir(parents=True, exist_ok=True)
+
+        return TestDirectory(tmpdir=child_directory)
 
     def rmdir(self):
-        """Remove the directory."""
-        self.tmpdir.remove()
+        """Remove the directory. If the directory is not empty, remove all
+        files and directories recursively."""
+        if self.tmpdir.exists():
+            shutil.rmtree(self.tmpdir)
 
         # @todo not sure if this is a good idea, but I guess the tmpdir is
         # invalid after the remove?
         self.tmpdir = None
 
     def join(self, *args):
-        """Get a TestDirectory instance representing a path."""
-        path = self.tmpdir.join(*args)
-        assert path.isdir()
+        """Get a TestDirectory instance representing an existing path"""
 
-        return TestDirectory(tmpdir=path)
+        new_path = self.tmpdir.joinpath(*args)
+
+        if not new_path.exists():
+            raise ValueError(f"{new_path} does not exist")
+
+        return TestDirectory(tmpdir=new_path)
 
     def rmfile(self, filename):
         """Remove a file.
 
         :param filename: The name of the file to remove as a pathlib.Path or string.
         """
-        file_path = pathlib.Path(str(self.tmpdir)) / pathlib.Path(filename)
+        file_path = self.tmpdir / pathlib.Path(filename)
 
         if file_path.is_file():
             file_path.unlink()
@@ -144,9 +155,9 @@ class TestDirectory(object):
         if relative:
             filepath = os.path.relpath(start=str(self.tmpdir), path=filepath)
 
-        link_name = self.tmpdir.join(os.path.basename(filepath))
+        link_name = self.tmpdir.joinpath(os.path.basename(filepath))
         if rename_as:
-            link_name = self.tmpdir.join(rename_as)
+            link_name = self.tmpdir.joinpath(rename_as)
 
         self._create_symlink(str(filepath), str(link_name), isdir=False)
 
@@ -176,23 +187,30 @@ class TestDirectory(object):
         if relative:
             directory = os.path.relpath(start=str(self.tmpdir), path=directory)
 
-        link_name = self.tmpdir.join(directory_name)
+        link_name = self.tmpdir.joinpath(directory_name)
 
         if rename_as:
-            link_name = self.tmpdir.join(rename_as)
+            link_name = self.tmpdir.joinpath(rename_as)
 
         self._create_symlink(source=directory, link_name=str(link_name), isdir=True)
 
         return str(link_name)
 
     def copy_files(self, filename):
+        """Copy files into testdirectory. Expand filename by expanding wildcards
+        e.g. 'dir/*'
+
+        :param filename: The filename as a string or pathlib.Path. This
+            represents a single file or glob pattern.
+        """
 
         # Expand filename by expanding wildcards e.g. 'dir/*', the
         # glob returns a list of files
         files = glob.glob(filename)
 
-        for f in files:
-            self.copy_file(f)
+        for file in files:
+            self.copy_file(filename=file)
+
 
     def copy_dir(self, directory):
         """Copy a directory into the test directory.
@@ -209,58 +227,53 @@ class TestDirectory(object):
                 # Prints /tmp/pytest-9/some_test/app
                 print(app_dir.path())
 
-        :param directory: Path to the directory as a string
+        :param directory: Path to the directory as a string or pathlib.Path
         :return: TestDirectory object representing the copied directory
         """
+        src_dir = pathlib.Path(directory)
+        dst_dir = self.tmpdir / src_dir.name
+        shutil.copytree(src_dir, dst_dir)
 
-        # From: http://stackoverflow.com/a/3925147
-        name = os.path.basename(os.path.normpath(directory))
+        return TestDirectory(tmpdir=dst_dir)
 
-        # We need to create the directory
-        target_dir = self.tmpdir.mkdir(name)
-
-        source_dir = py.path.local(directory)
-        source_dir.copy(target_dir)
-
-        print("Copy Dir: {} -> {}".format(source_dir, target_dir))
-
-        return TestDirectory(target_dir)
-
-    def write_text(self, filename, data, encoding):
+    def write_text(self, filename, data, encoding="utf-8"):
         """Writes a file in the temporary directory.
 
-        :return: The path to the file as a string
+        :param filename: Filename as string or pathlib.Path
+        :param data: The text data to write
+        :param encoding: The encoding to use (default utf-8)
+        :return: The path to the file as a pathlib.Path
         """
-
-        f = self.tmpdir.join(filename)
-        f.write_text(data=data, encoding=encoding)
-        return str(f)
+        file_path = self.tmpdir / pathlib.Path(filename)
+        file_path.write_text(data, encoding=encoding)
+        return file_path
 
     def write_binary(self, filename, data):
-        """Writes a file in the temporary directory."""
+        """Writes binary data to a file in the temporary directory.
 
-        f = self.tmpdir.join(filename)
-
-        print(type(f.strpath))
-
-        f.write_binary(data=data)
+        :param filename: Filename as string or pathlib.Path
+        :param data: The binary data to write
+        :return: The path to the file as a pathlib.Path
+        """
+        file_path = self.tmpdir / pathlib.Path(filename)
+        file_path.write_bytes(data)
+        return file_path
 
     def contains_file(self, filename):
         """Checks for the existence of a file.
 
-        :param filename: The filename to check for.
+        :param filename: The filename to check for as a string or pathlib.Path.
+                        May contain glob patterns.
         :return: True if the file is contained within the test directory.
+        :raises: ValueError if there is more than one match.
         """
-        files = glob.glob(os.path.join(self.path(), filename))
-
-        if len(files) == 0:
+        matches = list(self.tmpdir.glob(filename))
+        if len(matches) == 1 and matches[0].is_file():
+            return True
+        elif len(matches) > 1:
+            raise ValueError(f"Found multiple matches for {filename}")
+        else:
             return False
-
-        assert len(files) == 1
-
-        filename = files[0]
-
-        return os.path.isfile(filename)
 
     def contains_dir(self, *directories):
         """Checks for the existence of a directory.
@@ -396,13 +409,11 @@ class TestDirectory(object):
 
         The glob should return only one file
         """
-        files = glob.glob(filename)
 
-        print(filename)
-        print(files)
+        filename = pathlib.Path(filename)
+        files = list(filename.parent.glob(filename.name))
 
-        assert len(files) == 1
+        if len(files) != 1:
+            raise ValueError(f"Expected one file matching {filename}, found {len(files)}.")
 
-        filename = files[0]
-
-        return filename
+        return files[0]
