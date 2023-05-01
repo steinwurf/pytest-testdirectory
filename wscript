@@ -132,6 +132,3 @@ def _pytest(bld, venv):
     # in the file system and make some tests pass although their .py
     # counter-part has been e.g. deleted
     venv.run("python -B -m pytest {} --basetemp {}".format(testdir.abspath(), basetemp))
-
-    # Check the package
-    venv.run(f"twine check {wheel}")
