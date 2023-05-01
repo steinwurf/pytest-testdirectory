@@ -2,7 +2,6 @@ import os
 
 
 def test_run(testdirectory):
-
     testdirectory.run(["python", "--version"])
 
     testdirectory.run(["python", "--version"], stdout=None, stderr=None)
@@ -27,7 +26,7 @@ def test_testdirectory(testdirectory):
     sub1.rmfile("ok.txt")
     assert not os.path.isfile(ok_path)
 
-    sub1.write_text("ok2.txt", u"hello_world2", encoding="utf-8")
+    sub1.write_text("ok2.txt", "hello_world2", encoding="utf-8")
 
     ok_path = os.path.join(sub1.path(), "ok2.txt")
 
@@ -67,10 +66,11 @@ def test_testdirectory(testdirectory):
 
 
 def test_write_text(testdirectory):
-    ok_path = testdirectory.write_text("ok.txt", u"hello_world", encoding="utf-8")
+    ok_path = testdirectory.write_text("ok.txt", "hello_world", encoding="utf-8")
 
     assert testdirectory.contains_file("ok.txt")
     assert os.path.isfile(ok_path)
+
 
 def test_write_text(testdirectory):
     ok_path = testdirectory.write_binary("ok.bin", b"hello_world")
@@ -83,7 +83,7 @@ def test_symlink_file(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
     sub2 = testdirectory.mkdir("sub2")
 
-    ok_path = sub1.write_text("ok.txt", u"hello_world", encoding="utf-8")
+    ok_path = sub1.write_text("ok.txt", "hello_world", encoding="utf-8")
 
     # Create a symlink to 'ok.txt' inside sub2
     link_path = sub2.symlink_file(ok_path)
@@ -102,16 +102,18 @@ def test_symlink_dir(testdirectory):
     assert sub2.contains_dir("sub1")
     assert os.path.isdir(link_path)
 
+
 def test_contains_file(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
-    sub1.write_text("ok.txt", u"hello_world", encoding="utf-8")
+    sub1.write_text("ok.txt", "hello_world", encoding="utf-8")
 
     assert sub1.contains_file("ok.txt")
     assert not sub1.contains_file("nothere.txt")
 
+
 def test_contains_file_glob(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
-    sub1.write_text("ok.txt", u"hello_world", encoding="utf-8")
+    sub1.write_text("ok.txt", "hello_world", encoding="utf-8")
 
     assert sub1.contains_file("*.txt")
     assert not sub1.contains_file("nothere*")
@@ -132,17 +134,19 @@ def test_contains_dir_glob(testdirectory):
     assert sub1.contains_dir("sub*")
     assert not sub1.contains_dir("nothere*")
 
+
 def test_copy_file(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
     sub2 = testdirectory.mkdir("sub2")
 
-    ok_path = sub1.write_text("ok.txt", u"hello_world", encoding="utf-8")
+    ok_path = sub1.write_text("ok.txt", "hello_world", encoding="utf-8")
 
     # Copy 'ok.txt' inside sub2
     copy_path = sub2.copy_file(ok_path)
 
     assert sub2.contains_file("ok.txt")
     assert os.path.isfile(copy_path)
+
 
 def test_copy_dir(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
@@ -154,12 +158,13 @@ def test_copy_dir(testdirectory):
     assert sub2.contains_dir("sub1")
     assert os.path.isdir(copy_path.path())
 
+
 def test_copy_files(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
     sub2 = testdirectory.mkdir("sub2")
 
-    sub1.write_text("ok.txt", u"hello_world", encoding="utf-8")
-    sub1.write_text("ok2.txt", u"hello_world2", encoding="utf-8")
+    sub1.write_text("ok.txt", "hello_world", encoding="utf-8")
+    sub1.write_text("ok2.txt", "hello_world2", encoding="utf-8")
 
     # Copy 'ok.txt' and 'ok2.txt' inside sub2
     sub2.copy_files(filename=os.path.join(sub1.path(), "*"))
@@ -167,9 +172,10 @@ def test_copy_files(testdirectory):
     assert sub2.contains_file("ok.txt")
     assert sub2.contains_file("ok2.txt")
 
+
 def test_rmfile(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
-    sub1.write_text("ok.txt", u"hello_world", encoding="utf-8")
+    sub1.write_text("ok.txt", "hello_world", encoding="utf-8")
 
     assert sub1.contains_file("ok.txt")
 

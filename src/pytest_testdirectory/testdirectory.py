@@ -133,7 +133,9 @@ class TestDirectory:
         :return: The path to the file in its new location as a pathlib.Path object.
         """
         file_path = pathlib.Path(filename)
-        new_path = pathlib.Path(str(self.tmpdir)) / (rename_as if rename_as else file_path.name)
+        new_path = pathlib.Path(str(self.tmpdir)) / (
+            rename_as if rename_as else file_path.name
+        )
         shutil.copy2(str(file_path), str(new_path))
         return new_path
 
@@ -210,7 +212,6 @@ class TestDirectory:
 
         for file in files:
             self.copy_file(filename=file)
-
 
     def copy_dir(self, directory):
         """Copy a directory into the test directory.
@@ -337,7 +338,7 @@ class TestDirectory:
             # Need to decode the stdout and stderr with the correct
             # character encoding (http://stackoverflow.com/a/28996987)
             universal_newlines=True,
-            **kwargs
+            **kwargs,
         )
 
         stdout, stderr = popen.communicate()
@@ -414,6 +415,8 @@ class TestDirectory:
         files = list(filename.parent.glob(filename.name))
 
         if len(files) != 1:
-            raise ValueError(f"Expected one file matching {filename}, found {len(files)}.")
+            raise ValueError(
+                f"Expected one file matching {filename}, found {len(files)}."
+            )
 
         return files[0]
