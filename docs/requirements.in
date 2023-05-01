@@ -1,4 +1,6 @@
 sphinx
 giit
 versjon
+
+# Cloudflare python version too old
 sphinxcontrib-applehelp<1.0.3
