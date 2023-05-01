@@ -6,13 +6,24 @@ on:
   push:
   pull_request:
 jobs:
-  waf:
-    name: Waf
-    runs-on: [self-hosted, Linux, builder, docker, Windows]
+  waf-windows:
+    runs-on: [self-hosted, Windows]
+    name: Windows Waf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: python waf configure
+      - name: Build
+        run: python waf
+      - name: Test
+        run: python waf --run_tests -vv
+  waf-linux:
+    runs-on: [self-hosted, docker, builder]
+    name: Linux Waf
     container:
-      image: python:3.9.5
-      # We run the container with root privileges such that we can create and modify network namespaces.
-      options: --user 0:0 --privileged
+      image: ghcr.io/steinwurf/waf:latest
+      options: --user 0:0
       volumes:
         - /home/buildbot/.ssh:/root/.ssh
     steps:
@@ -23,4 +34,16 @@ jobs:
       - name: Build
         run: python3 waf
       - name: Test
-        run: python3 waf --run_tests
+        run: python3 waf --run_tests -vv
+  waf-macos:
+    runs-on: [self-hosted, macOS]
+    name: macOS Waf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: python3 waf configure
+      - name: Build
+        run: python3 waf
+      - name: Test
+        run: python3 waf --run_tests -vv
