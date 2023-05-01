@@ -200,7 +200,7 @@ class TestDirectory:
 
     def copy_files(self, filename):
         """Copy files into testdirectory. Expand filename by expanding wildcards
-        e.g. 'dir/*'
+        e.g. ``dir/*``
 
         :param filename: The filename as a string or pathlib.Path. This
             represents a single file or glob pattern.
@@ -216,7 +216,7 @@ class TestDirectory:
     def copy_dir(self, directory):
         """Copy a directory into the test directory.
 
-        Example (using the test fixture test_directory):
+        Example (using the test fixture test_directory)::
 
             def test_something(test_directory):
 
