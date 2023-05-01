@@ -22,7 +22,7 @@ jobs:
     runs-on: [self-hosted, docker, builder]
     name: Linux Waf
     container:
-      image: ghcr.io/steinwurf/waf:latest
+      image: ghcr.io/steinwurf/twine:latest
       options: --user 0:0
       volumes:
         - /home/buildbot/.ssh:/root/.ssh
