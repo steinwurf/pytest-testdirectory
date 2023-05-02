@@ -10,7 +10,7 @@ cwd = os.path.abspath(os.path.dirname(__file__))
 with io.open(os.path.join(cwd, "README.rst"), encoding="utf-8") as fd:
     long_description = fd.read()
 
-VERSION = "4.0.0"
+VERSION = "5.0.0"
 
 setup(
     name="pytest-testdirectory",

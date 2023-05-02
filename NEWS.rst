@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+5.0.0
+-----
 * Major: Move to Python pathlib
 
 4.0.0
