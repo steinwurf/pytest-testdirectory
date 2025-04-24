@@ -163,8 +163,6 @@ class TestDirectory:
 
         self._create_symlink(str(filepath), str(link_name), isdir=False)
 
-        print("Symlink file: {} -> {}".format(filepath, link_name))
-
         return str(link_name)
 
     def symlink_dir(self, directory, rename_as="", relative=True):

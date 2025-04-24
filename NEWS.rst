@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Patch: Removed unnecessary print statement in TestDirectory.symlink_file function.
 
 5.0.0
 -----
