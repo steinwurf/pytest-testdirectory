@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* Patch: Removed unnecessary print statement in TestDirectory.symlink_file function.
+* Patch: Removed an unnecessary print statement from the `TestDirectory.symlink_file` function.
 
 5.0.0
 -----
